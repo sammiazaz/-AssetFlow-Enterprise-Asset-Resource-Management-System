@@ -1,0 +1,287 @@
+.headerSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.headerActions {
+  display: flex;
+  gap: 8px;
+}
+.iconBtn {
+  padding: 8px;
+  border-radius: 8px;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface-variant);
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.iconBtn:hover {
+  background-color: var(--color-surface-container-highest);
+}
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.filterLabel {
+  font-size: 12px;
+  color: var(--color-outline);
+  text-transform: uppercase;
+  margin-right: 8px;
+  font-weight: 600;
+}
+.filterChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 99px;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  transition: all 0.2s;
+  color: var(--color-on-surface);
+  cursor: pointer;
+  font-weight: 500;
+}
+.filterChip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.clearFilters {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.clearFilters:hover {
+  text-decoration: underline;
+}
+
+.tableContainer {
+  background-color: var(--color-surface-container-lowest);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  margin-top: 32px;
+}
+.table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+.th {
+  padding: 20px 24px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: rgba(243, 243, 254, 0.5);
+}
+.tr {
+  transition: background-color 0.2s;
+  border-top: 1px solid rgba(195, 198, 215, 0.2);
+}
+.tr:hover {
+  background-color: rgba(243, 243, 254, 0.5);
+}
+.td {
+  padding: 20px 24px;
+}
+.assetTag {
+  padding: 4px 12px;
+  background-color: var(--color-surface-container-highest);
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--color-on-surface);
+  font-weight: 600;
+}
+.assetIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.iconElectronics {
+  background-color: rgba(10, 81, 211, 0.1);
+  color: var(--color-primary);
+}
+.iconFurniture {
+  background-color: rgba(70, 72, 212, 0.1);
+  color: var(--color-secondary);
+}
+.iconInfrastructure {
+  background-color: rgba(186, 26, 26, 0.1);
+  color: var(--color-error);
+}
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.statusAllocated {
+  background-color: rgba(59, 111, 240, 0.15);
+  color: #3B6FF0;
+}
+.statusDotAllocated {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #3B6FF0;
+  margin-right: 8px;
+}
+.statusMaintenance {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #D97706;
+}
+.statusDotMaintenance {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #F59E0B;
+  margin-right: 8px;
+}
+.statusAvailable {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+.statusDotAvailable {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10B981;
+  margin-right: 8px;
+}
+.actionBtn {
+  padding: 8px;
+  border-radius: var(--radius-full);
+  color: var(--color-on-surface-variant);
+  transition: background-color 0.2s;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.actionBtn:hover {
+  background-color: var(--color-surface-container-highest);
+}
+
+.pagination {
+  padding: 20px 32px;
+  background-color: rgba(243, 243, 254, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pageControls {
+  display: flex;
+  gap: 8px;
+}
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface-variant);
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+}
+.pageBtn:hover {
+  background-color: var(--color-surface-container-highest);
+}
+.pageBtnActive {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 700;
+  border: none;
+}
+
+.footerGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+  padding-bottom: 48px;
+}
+.statCard {
+  grid-column: span 12;
+  background-color: var(--color-primary-container);
+  border-radius: 20px;
+  padding: 32px;
+  color: var(--color-on-primary-container);
+  position: relative;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .statCard {
+    grid-column: span 4;
+  }
+}
+.highlightCard {
+  grid-column: span 12;
+  background-color: var(--color-surface-container-lowest);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  border: 1px solid rgba(10, 81, 211, 0.1);
+}
+@media (min-width: 768px) {
+  .highlightCard {
+    grid-column: span 8;
+  }
+}
+.featuredImage {
+  width: 128px;
+  height: 128px;
+  border-radius: 16px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px;
+  height: 56px;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(10, 81, 211, 0.3);
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  z-index: 50;
+}
+.fab:hover {
+  transform: scale(1.1);
+}

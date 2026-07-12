@@ -1,0 +1,180 @@
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+}
+.pageTitle {
+  color: var(--color-on-surface);
+}
+.pageSubtitle {
+  color: var(--color-on-surface-variant);
+  margin-top: 4px;
+}
+.btnPrimary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+.btnPrimary:hover {
+  transform: translateY(-1px);
+}
+.tabContainer {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.tabBtn {
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-on-surface-variant);
+  font-weight: 500;
+  border-radius: 20px; /* 20% round equivalent */
+  transition: all 0.2s;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-outline-variant);
+}
+.tabBtn:hover:not(.tabBtnActive) {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.tabBtnActive {
+  color: #fff;
+  background-color: var(--color-primary);
+  font-weight: 700;
+  border-color: var(--color-primary);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+}
+.tableCard {
+  grid-column: span 12;
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+.table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+.th {
+  padding: 20px 32px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: rgba(243, 243, 254, 0.5);
+}
+.tr {
+  transition: background-color 0.2s;
+  border-top: 1px solid rgba(195, 198, 215, 0.2);
+}
+.tr:hover {
+  background-color: rgba(243, 243, 254, 0.5);
+}
+.td {
+  padding: 20px 32px;
+}
+.deptIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+.deptIconE {
+  background-color: rgba(10, 81, 211, 0.1);
+  color: var(--color-primary);
+}
+.deptIconF {
+  background-color: rgba(70, 72, 212, 0.1);
+  color: var(--color-secondary);
+}
+.deptIconFO {
+  background-color: rgba(255, 182, 142, 0.2);
+  color: var(--color-tertiary);
+}
+.badgeActive {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  font-size: 12px;
+  font-weight: 700;
+}
+.badgeInactive {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-container-highest);
+  color: var(--color-on-surface-variant);
+  font-size: 12px;
+  font-weight: 700;
+}
+.actionBtn {
+  padding: 8px;
+  border-radius: var(--radius-full);
+  color: var(--color-on-surface-variant);
+  transition: background-color 0.2s;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.actionBtn:hover {
+  background-color: var(--color-surface-container-highest);
+}
+.helpCard {
+  grid-column: span 12;
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+@media (min-width: 1024px) {
+  .helpCard {
+    grid-column: span 4;
+  }
+}
+.mapCard {
+  grid-column: span 12;
+  background-color: #ffffff;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+@media (min-width: 1024px) {
+  .mapCard {
+    grid-column: span 8;
+  }
+}
