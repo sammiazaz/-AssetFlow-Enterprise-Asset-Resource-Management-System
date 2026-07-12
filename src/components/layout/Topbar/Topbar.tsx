@@ -38,11 +38,6 @@ export default function Topbar({ title }: TopbarProps) {
         </div>
       </div>
       <div className={styles.topbarActions}>
-        <Link href="/assets" className={styles.quickLink} style={{ textDecoration: 'none' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
-          Register Asset
-        </Link>
-        <div className={styles.dividerVertical} />
         <Link href="/bookings" className={styles.helpBtn} title="Book Resource" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span className="material-symbols-outlined">calendar_today</span>
         </Link>
