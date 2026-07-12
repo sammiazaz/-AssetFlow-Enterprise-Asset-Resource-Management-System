@@ -1,0 +1,68 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id              String       @id @default(cuid())
+  email           String       @unique
+  password        String
+  name            String
+  role            String       // 'Admin' | 'Asset Manager' | 'Department Head' | 'Employee'
+  status          String       @default("Active")
+  departmentId    String?
+  department      Department?  @relation("DepartmentMembers", fields: [departmentId], references: [id])
+  headOfDepartment Department[] @relation("DepartmentHead")
+  assignedAssets  Asset[]      @relation("AssignedTo")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String
+  headId    String?
+  head      User?    @relation("DepartmentHead", fields: [headId], references: [id])
+  parentId  String?
+  status    String   @default("Active")
+  members   User[]   @relation("DepartmentMembers")
+  assets    Asset[]  @relation("DepartmentAssets")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  fields    String   // JSON string of fields, e.g., '["Warranty Expiry"]'
+  assets    Asset[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Asset {
+  id                 String      @id @default(cuid())
+  tag                String      @unique
+  name               String
+  categoryId         String
+  category           Category    @relation(fields: [categoryId], references: [id])
+  status             String      // 'Available' | 'Allocated' | 'Reserved' | 'Under Maintenance' | 'Lost' | 'Retired' | 'Disposed'
+  departmentId       String?
+  department         Department? @relation("DepartmentAssets", fields: [departmentId], references: [id])
+  assignedTo         String?
+  assignedUser       User?       @relation("AssignedTo", fields: [assignedTo], references: [id])
+  expectedReturnDate String?
+  location           String
+  serialNumber       String
+  condition          String
+  acquisitionDate    String
+  acquisitionCost    Float
+  isSharedBookable   Boolean     @default(false)
+  history            String      // JSON string of history array
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
