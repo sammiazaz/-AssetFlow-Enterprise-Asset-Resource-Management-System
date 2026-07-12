@@ -1,8 +1,9 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import styles from '../app/page.module.css';
+import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: 'dashboard' },
@@ -18,6 +19,13 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -47,14 +55,14 @@ export default function Sidebar() {
           );
         })}
         <div className={styles.navDivider} />
-        <Link
-          href="/login"
+        <button
+          onClick={handleLogout}
           className={styles.navItem}
-          style={{ color: 'rgba(255,255,255,0.5)', marginTop: 'auto' }}
+          style={{ color: 'rgba(255,255,255,0.5)', marginTop: 'auto', width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
           <span style={{ fontSize: 13 }}>Logout</span>
-        </Link>
+        </button>
       </nav>
     </aside>
   );

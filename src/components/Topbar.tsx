@@ -2,12 +2,28 @@
 
 import Link from 'next/link';
 import styles from '../app/page.module.css';
+import { useAuth } from '@/context/AuthContext';
 
 interface TopbarProps {
   title?: string;
 }
 
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
 export default function Topbar({ title }: TopbarProps) {
+  const { user } = useAuth();
+
+  const displayName = user?.name || 'User';
+  const displayRole = user?.role || 'Employee';
+  const initials = getInitials(displayName);
+
   return (
     <header className={styles.topbar}>
       <div className={styles.searchContainer}>
@@ -36,16 +52,21 @@ export default function Topbar({ title }: TopbarProps) {
         </button>
         <div className={styles.dividerVertical} />
         <div className={styles.userProfile}>
-          <div className={styles.userAvatar}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1TUCT6ofiNoGnpP2VdVWgI3ltZnxuWK7zHQFoUJcDXoDItExzQDJebm1BNB2DbHkw4_pM9fk9AO_VzntpjV56193Y0WkMar4K9qeoY4PF_gTIr9FHMlSNFjEbhS9zjURTyU6t9xNZqP00Twern6VKocWScmBRMWOVRQme0OWCriOqt5gl-bZmSMeD_FvoQMn9HyscL5GbvVK0Mou9CtxoAGqr267td_jd6EGn1on-_zlX6oW7MXUk"
-              alt="Profile"
-            />
+          <div className={styles.userAvatar} style={{
+            background: 'linear-gradient(135deg, #2e86de, #6c5ce7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 13,
+            userSelect: 'none',
+          }}>
+            {initials}
           </div>
           <div className={styles.userInfo}>
-            <p className={styles.userName}>Admin User</p>
-            <p className={styles.userRole}>System Administrator</p>
+            <p className={styles.userName}>{displayName}</p>
+            <p className={styles.userRole}>{displayRole}</p>
           </div>
         </div>
       </div>
