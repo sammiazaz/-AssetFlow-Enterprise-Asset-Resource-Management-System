@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import Sidebar from '@/components/layout/Sidebar';
-import Topbar from '@/components/layout/Topbar';
-import layoutStyles from '@/app/dashboard/dashboard.module.css';
+import Sidebar from '@/components/Sidebar';
+import Topbar from '@/components/Topbar';
+import layoutStyles from '../page.module.css';
 import styles from './notifications.module.css';
 
-
+import { useMockData } from '@/context/MockDataContext';
 
 type Tab = 'all' | 'alerts' | 'approvals' | 'bookings';
 
@@ -45,16 +45,8 @@ function getIconAndColor(type: string) {
 }
 
 export default function NotificationsPage() {
-  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const { activityLogs, setActivityLogs } = useMockData();
   const [activeTab, setActiveTab] = useState<Tab>('all');
-
-  React.useEffect(() => {
-    fetch('/api/notifications')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setActivityLogs(data);
-      });
-  }, []);
 
   const mappedLogs = activityLogs.map(log => {
     const { icon, color } = getIconAndColor(log.type);
@@ -73,18 +65,8 @@ export default function NotificationsPage() {
   const filtered = activeTab === 'all' ? mappedLogs : mappedLogs.filter(n => n.type === activeTab);
   const unread = mappedLogs.filter(n => !n.read).length;
 
-  const markAllRead = async () => {
-    const unreadLogs = activityLogs.filter(n => !n.read);
-    setActivityLogs(prev => prev.map(n => ({ ...n, read: true })));
-    for (const log of unreadLogs) {
-      fetch(`/api/notifications/${log.id}/read`, { method: 'PATCH' });
-    }
-  };
-
-  const markRead = async (id: string) => {
-    setActivityLogs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
-  };
+  const markAllRead = () => setActivityLogs(prev => prev.map(n => ({ ...n, read: true })));
+  const markRead = (id: string) => setActivityLogs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
 
   return (
     <div className={layoutStyles.layout}>

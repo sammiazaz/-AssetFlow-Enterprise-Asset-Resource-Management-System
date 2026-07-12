@@ -18,8 +18,6 @@ model User {
   department      Department?  @relation("DepartmentMembers", fields: [departmentId], references: [id])
   headOfDepartment Department[] @relation("DepartmentHead")
   assignedAssets  Asset[]      @relation("AssignedTo")
-  bookings        Booking[]
-  maintenanceRequests MaintenanceRequest[]
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 }
@@ -67,44 +65,4 @@ model Asset {
   history            String      // JSON string of history array
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
-  
-  maintenanceRequests MaintenanceRequest[]
-  bookings            Booking[]
-}
-
-model Booking {
-  id         String   @id @default(cuid())
-  assetId    String
-  asset      Asset    @relation(fields: [assetId], references: [id])
-  employeeId String
-  employee   User     @relation(fields: [employeeId], references: [id])
-  startTime  DateTime
-  endTime    DateTime
-  status     String   // 'Upcoming' | 'Ongoing' | 'Completed' | 'Cancelled'
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-}
-
-model MaintenanceRequest {
-  id          String   @id @default(cuid())
-  assetId     String
-  asset       Asset    @relation(fields: [assetId], references: [id])
-  requestedBy String
-  requester   User     @relation(fields: [requestedBy], references: [id])
-  issue       String
-  priority    String   // 'Low' | 'Medium' | 'High'
-  status      String   // 'Pending' | 'Approved' | 'Rejected' | 'In Progress' | 'Resolved'
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  type      String   // 'Allocation' | 'Booking' | 'Maintenance' | 'Alert'
-  text      String
-  date      DateTime @default(now())
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

@@ -1,13 +1,11 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/layout/Sidebar';
-import Topbar from '@/components/layout/Topbar';
-import layoutStyles from '@/app/dashboard/dashboard.module.css';
+import Sidebar from '@/components/Sidebar';
+import Topbar from '@/components/Topbar';
+import layoutStyles from '../page.module.css';
 import styles from './reports.module.css';
-import { useToast } from '@/context/ToastContext';
-
+import { useMockData } from '@/context/MockDataContext';
 import {
   BarChart,
   Bar,
@@ -23,26 +21,61 @@ import {
 } from 'recharts';
 
 export default function ReportsPage() {
-  const router = useRouter();
-  const { showToast } = useToast();
-  const [reportsData, setReportsData] = React.useState<any>({
-    deptData: [],
-    mostUsed: [],
-    idleAssets: [],
-    maintenanceDue: [],
-    chartData: []
-  });
+  const { assets, bookings, maintenanceRequests, departments } = useMockData();
 
-  React.useEffect(() => {
-    fetch('/api/reports')
-      .then(res => res.json())
-      .then(data => {
-        if (!data.error) setReportsData(data);
-      });
-  }, []);
+  const deptData = useMemo(() => {
+    // calculate actual assets per department
+    return departments.map(d => {
+      const deptAssets = assets.filter(a => a.departmentId === d.id);
+      return {
+        dept: d.name,
+        value: Math.floor(Math.random() * 50) + 30, // simulated utilization %
+        assets: deptAssets.length,
+      };
+    });
+  }, [assets, departments]);
 
-  const { deptData, mostUsed, idleAssets, maintenanceDue, chartData } = reportsData;
-  const maxBarValue = deptData.length > 0 ? Math.max(...deptData.map((d: any) => d.value), 100) : 100;
+  const maxBarValue = Math.max(...deptData.map(d => d.value), 100);
+
+  const mostUsed = useMemo(() => {
+    return assets.slice(0, 3).map((a, i) => ({
+      name: a.name,
+      uses: 30 - i * 5,
+      trips: 20 - i * 3,
+      icon: a.categoryId === 'c1' ? 'laptop_mac' : a.categoryId === 'c3' ? 'directions_car' : 'videocam',
+      color: i === 0 ? '#2e86de' : i === 1 ? '#6c5ce7' : '#00b894'
+    }));
+  }, [assets]);
+
+  const idleAssets = useMemo(() => {
+    return assets.filter(a => a.status === 'Available').slice(0, 3).map(a => ({
+      name: a.name,
+      days: Math.floor(Math.random() * 30) + 30,
+      icon: a.categoryId === 'c1' ? 'laptop_mac' : 'inventory_2',
+      color: '#e17055'
+    }));
+  }, [assets]);
+
+  const maintenanceDue = useMemo(() => {
+    return maintenanceRequests.filter(m => m.status === 'Pending').slice(0, 3).map(m => {
+      const a = assets.find(x => x.id === m.assetId);
+      return {
+        name: a ? a.name : 'Unknown',
+        due: m.issue,
+        urgent: m.priority === 'High'
+      };
+    });
+  }, [maintenanceRequests, assets]);
+
+  const chartData = [
+    { name: 'Jan', value: 45 },
+    { name: 'Feb', value: 50 },
+    { name: 'Mar', value: 55 },
+    { name: 'Apr', value: 40 },
+    { name: 'May', value: 65 },
+    { name: 'Jun', value: 75 },
+    { name: 'Jul', value: 85 },
+  ];
   return (
     <div className={layoutStyles.layout}>
       <Sidebar />
@@ -54,13 +87,13 @@ export default function ReportsPage() {
             <p className={layoutStyles.pageSubtitle}>Utilization, maintenance frequency, and asset health insights</p>
           </div>
           <div className={layoutStyles.headerActions}>
-            <button className={layoutStyles.btnSecondary} onClick={() => { window.print(); showToast('Report preview opened for printing.'); }}>
+            <button className={layoutStyles.btnSecondary}>
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
               Export PDF
             </button>
-            <button className={layoutStyles.btnPrimary} style={{ textDecoration: 'none' }} onClick={() => { showToast('Latest report insights refreshed.'); }}>
+            <button className={layoutStyles.btnPrimary} style={{ textDecoration: 'none' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>summarize</span>
-              Generate Summary
+              Report Report
             </button>
           </div>
         </div>
@@ -120,7 +153,7 @@ export default function ReportsPage() {
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Most Used Assets</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-              {(mostUsed || []).map((a: any, i: number) => (
+              {mostUsed.map((a, i) => (
                 <div key={a.name} className={styles.listItem}>
                   <span className={styles.rankNum}>{i + 1}</span>
                   <div className={styles.listIcon} style={{ background: a.color + '1a' }}>
@@ -144,7 +177,7 @@ export default function ReportsPage() {
             <h2 className={styles.cardTitle}>Idle Assets</h2>
             <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>Not moved in 60+ days</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {(idleAssets || []).map((a: any) => (
+              {idleAssets.map((a) => (
                 <div key={a.name} className={styles.listItem}>
                   <div className={styles.listIcon} style={{ background: '#fff3f0' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#e17055', fontVariationSettings: "'FILL' 1" }}>
@@ -155,7 +188,7 @@ export default function ReportsPage() {
                     <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-on-surface)' }}>{a.name}</p>
                     <p style={{ fontSize: 11, color: '#e17055', marginTop: 2 }}>Idle for {a.days} days</p>
                   </div>
-                  <button className={styles.reviewBtn} onClick={() => { showToast(`Review workflow for ${a.name} opened.`); router.push('/maintenance'); }}>Review</button>
+                  <button className={styles.reviewBtn}>Review</button>
                 </div>
               ))}
             </div>
@@ -165,7 +198,7 @@ export default function ReportsPage() {
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Due for Maintenance / Retirement</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-              {(maintenanceDue || []).map((a: any) => (
+              {maintenanceDue.map((a) => (
                 <div key={a.name} className={`${styles.dueItem} ${a.urgent ? styles.dueItemUrgent : ''}`}>
                   <span className="material-symbols-outlined" style={{ fontSize: 16, color: a.urgent ? '#e17055' : '#e67e22', fontVariationSettings: "'FILL' 1" }}>
                     {a.urgent ? 'error' : 'schedule'}
