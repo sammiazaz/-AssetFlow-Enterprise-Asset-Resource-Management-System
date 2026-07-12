@@ -1,0 +1,194 @@
+.grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  margin-bottom: 14px;
+}
+
+.roomItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-outline-variant);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+
+.roomItem:hover {
+  border-color: #2e86de;
+}
+
+.roomItemActive {
+  border-color: #2e86de;
+  background: #f0f7ff;
+}
+
+.roomIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: #ddeeff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.amenityTag {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--color-surface-container);
+  border-radius: var(--radius-full);
+  color: var(--color-on-surface-variant);
+  font-weight: 500;
+}
+
+.dayPicker {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.dayBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-outline-variant);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 56px;
+  color: var(--color-on-surface);
+}
+
+.dayBtn:hover {
+  border-color: #2e86de;
+}
+
+.dayBtnActive {
+  background: #2e86de;
+  color: #fff;
+  border-color: #2e86de;
+}
+
+.slotsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.slotAvailable {
+  background: #d4f5ee;
+  border-color: #00b894;
+  color: #006d4e;
+}
+
+.slotAvailable:hover {
+  background: #b2edd9;
+}
+
+.slotBooked {
+  background: #ffeaa7;
+  border-color: #e67e22;
+  color: #7d4e00;
+  cursor: not-allowed;
+}
+
+.slotConflict {
+  background: #ffd5cf;
+  border-color: #e17055;
+  color: #8b2a14;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.slotSelected {
+  background: #ddeeff;
+  border-color: #2e86de;
+  color: #1a5fa8;
+}
+
+.bookBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  background: #00b894;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bookBtn:hover:not(:disabled) {
+  background: #00997c;
+}
+
+.bookBtn:disabled {
+  background: var(--color-surface-container);
+  color: var(--color-on-surface-variant);
+  cursor: not-allowed;
+}
+
+.successBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #d4f5ee;
+  border: 1px solid #a8e8d8;
+  border-radius: var(--radius-md);
+}
+
+.newBookingBtn {
+  margin-left: auto;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #00b894;
+  color: #00b894;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}

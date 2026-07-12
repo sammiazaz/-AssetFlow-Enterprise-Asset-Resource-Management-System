@@ -1,0 +1,144 @@
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--color-outline-variant);
+  margin-bottom: 16px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-on-surface-variant);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: #2e86de;
+}
+
+.tabActive {
+  color: #2e86de;
+  font-weight: 600;
+  border-bottom-color: #2e86de;
+}
+
+.tabCount {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-container);
+  color: var(--color-on-surface-variant);
+}
+
+.tabCountActive {
+  background: #ddeeff;
+  color: #2e86de;
+}
+
+.listCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-surface-container);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.item:last-child { border-bottom: none; }
+
+.item:hover {
+  background: var(--color-surface-container-low);
+}
+
+.itemUnread {
+  background: #f8fbff;
+}
+
+.itemIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.itemContent {
+  flex: 1;
+}
+
+.itemText {
+  font-size: 13px;
+  color: var(--color-on-surface);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.itemTime {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 3px;
+}
+
+.unreadDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.typeBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.unreadCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: #e17055;
+  color: #fff;
+  min-width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  padding: 0 5px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px;
+  color: var(--color-on-surface-variant);
+  font-size: 13px;
+}

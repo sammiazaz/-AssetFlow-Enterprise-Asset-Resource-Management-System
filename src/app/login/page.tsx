@@ -1,115 +1,72 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import styles from './login.module.css';
 
-export default function LoginScreen() {
-  const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleSignIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Mock login, redirect to Dashboard
-    router.push('/');
-  };
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
 
   return (
-    <div className={styles.container}>
-      {/* Auth Card */}
-      <div className={styles.authCard}>
-        {/* Animated Background Accent (Subtle) */}
-        <div className={styles.bgAccentTop}></div>
-        <div className={styles.bgAccentBottom}></div>
-        
-        {/* Header */}
-        <div className={styles.header}>
-          {/* Logo Badge */}
-          <div className={`${styles.logoBadge} headline-md`}>
-            AF
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <div className={styles.logo}>
+          <span style={{ fontSize: 28, fontWeight: 700, color: '#fff' }}>AF</span>
+        </div>
+        <h1 className={styles.title}>AssetFlow – login</h1>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Email</label>
+          <input
+            type="email"
+            className={styles.input}
+            placeholder="name@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        <div className={styles.field}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <label className={styles.label}>Password</label>
+            <a href="#" className={styles.forgotLink}>Forgot password</a>
           </div>
-          <div>
-            <h1 className={`${styles.title} headline-md`}>AssetFlow — Login</h1>
-            <p className={`${styles.subtitle} body-md`}>Enter your credentials to access your workspace</p>
+          <div style={{ position: 'relative' }}>
+            <input
+              type={showPass ? 'text' : 'password'}
+              className={styles.input}
+              placeholder="••••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className={styles.eyeBtn}
+              onClick={() => setShowPass(!showPass)}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                {showPass ? 'visibility_off' : 'visibility'}
+              </span>
+            </button>
           </div>
         </div>
-        
-        {/* Form Fields */}
-        <form className={styles.form} onSubmit={handleSignIn}>
-          <div className={styles.field}>
-            <label htmlFor="email" className="label-md">Email Address</label>
-            <div className={styles.inputWrapper}>
-              <span className={`material-symbols-outlined ${styles.icon}`}>mail</span>
-              <input 
-                type="email" 
-                id="email" 
-                className={`${styles.input} body-md`} 
-                placeholder="name@company.com" 
-                required 
-              />
-            </div>
-          </div>
-          
-          <div className={styles.field}>
-            <div className={styles.labelRow}>
-              <label htmlFor="password" className="label-md">Password</label>
-              <a href="#" className="label-md">Forgot password?</a>
-            </div>
-            <div className={styles.inputWrapper}>
-              <span className={`material-symbols-outlined ${styles.icon}`}>lock</span>
-              <input 
-                type={showPassword ? "text" : "password"} 
-                id="password" 
-                className={`${styles.input} body-md`} 
-                placeholder="••••••••" 
-                required 
-              />
-              <button 
-                type="button" 
-                className={styles.visibilityToggle}
-                onClick={togglePasswordVisibility}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                <span className="material-symbols-outlined">
-                  {showPassword ? 'visibility_off' : 'visibility'}
-                </span>
-              </button>
-            </div>
-          </div>
-          
-          <button type="submit" className={`${styles.submitBtn} headline-sm`}>
-            Sign In
-          </button>
-        </form>
-        
-        {/* Divider */}
-        <div className={styles.divider}>
-          <div className={styles.line}></div>
-          <span className="label-md">OR</span>
-          <div className={styles.line}></div>
-        </div>
-        
-        {/* New Here Section */}
+
+        <Link href="/" className={styles.loginBtn}>
+          Login
+        </Link>
+
+        <div className={styles.divider} />
+
         <div className={styles.newHere}>
-          <div className={styles.infoBox}>
-            <p className="label-md">
-              New here? Sign up creates an Employee account — admin roles assigned later
-            </p>
-          </div>
-          <button type="button" className={`${styles.createBtn} headline-sm`}>
-            Create Account
-          </button>
+          <p className={styles.newHereTitle}>New here?</p>
+          <p className={styles.newHereDesc}>
+            Sign up creates an employee account<br />
+            admin roles assigned later
+          </p>
+          <button className={styles.createBtn}>Create Account</button>
         </div>
-      </div>
-      
-      {/* Background Decoration */}
-      <div className={styles.bgDecoration}>
-        <div className={styles.decTop}></div>
-        <div className={styles.decBottom}></div>
       </div>
     </div>
   );
