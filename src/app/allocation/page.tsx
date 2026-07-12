@@ -1,19 +1,37 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Topbar from '@/components/Topbar';
-import layoutStyles from '../page.module.css';
+import Sidebar from '@/components/layout/Sidebar';
+import Topbar from '@/components/layout/Topbar';
+import layoutStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './allocation.module.css';
-import { useMockData } from '@/context/MockDataContext';
 import { useToast } from '@/context/ToastContext';
-import { Asset } from '@/lib/mockDb';
+import { Asset } from '@prisma/client';
+
+type UIAsset = Omit<Asset, 'history'> & { history: string[] };
 
 export default function AllocationPage() {
-  const { assets, employees, departments, setAssets, addActivityLog } = useMockData();
+  const [assets, setAssets] = useState<UIAsset[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/assets').then(res => res.json()),
+      fetch('/api/employees').then(res => res.json()),
+      fetch('/api/departments').then(res => res.json())
+    ]).then(([a, e, d]) => {
+      if (Array.isArray(a)) setAssets(a);
+      if (Array.isArray(e)) setEmployees(e);
+      if (Array.isArray(d)) setDepartments(d);
+    });
+  }, []);
+
+  const addActivityLog = (text: string, type: string) => { console.log("Activity Log:", text, type); };
+
   const { showToast } = useToast();
 
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<UIAsset | null>(null);
   const [toEmployee, setToEmployee] = useState('');
   const [expectedReturnDate, setExpectedReturnDate] = useState('');
   const [notes, setNotes] = useState('');
@@ -173,39 +191,36 @@ export default function AllocationPage() {
                   <button 
                     className={styles.btnPrimary} 
                     style={{ marginTop: 8 }}
-                    onClick={() => {
+                    onClick={async () => {
                       if (!toEmployee) {
                         showToast('Please select an employee.', 'error');
                         return;
                       }
                       
                       const empName = employees.find(e => e.id === toEmployee)?.name;
-                      const deptId = employees.find(e => e.id === toEmployee)?.departmentId;
+                      const isAvailable = selectedAsset.status === 'Available';
+                      const endpoint = isAvailable ? 'allocate' : 'transfer';
                       
-                      setAssets(prev => prev.map(a => {
-                        if (a.id === selectedAsset.id) {
-                          const eventDesc = a.status === 'Available' 
-                            ? `Allocated to ${empName}` 
-                            : `Transfer requested from ${employees.find(e => e.id === a.assignedTo)?.name} to ${empName}`;
-                            
-                          return {
-                            ...a,
-                            status: a.status === 'Available' ? 'Allocated' : a.status, // Fake transfer logic just leaves it allocated until approved
-                            assignedTo: a.status === 'Available' ? toEmployee : a.assignedTo,
-                            departmentId: a.status === 'Available' ? deptId : a.departmentId,
-                            expectedReturnDate: expectedReturnDate || a.expectedReturnDate,
-                            history: [eventDesc, ...a.history]
-                          } as Asset;
-                        }
-                        return a;
-                      }));
+                      const res = await fetch(`/api/assets/${selectedAsset.id}/${endpoint}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ toEmployee, expectedReturnDate, notes })
+                      });
                       
-                      addActivityLog(`${selectedAsset.name} ${selectedAsset.status === 'Available' ? 'allocated to' : 'transfer requested by'} ${empName}`, 'Allocation');
-                      showToast('Request processed successfully!');
-                      setSubmitted(true);
-                      setToEmployee('');
-                      setExpectedReturnDate('');
-                      setNotes('');
+                      if (res.ok) {
+                        const updatedAsset = await res.json();
+                        setAssets(prev => prev.map(a => a.id === updatedAsset.id ? updatedAsset : a));
+                        
+                        addActivityLog(`${selectedAsset.name} ${isAvailable ? 'allocated to' : 'transfer requested by'} ${empName}`, 'Allocation');
+                        showToast('Request processed successfully!');
+                        setSubmitted(true);
+                        setToEmployee('');
+                        setExpectedReturnDate('');
+                        setNotes('');
+                      } else {
+                        const data = await res.json();
+                        showToast(data.error || 'Failed to process request', 'error');
+                      }
                     }}
                   >
                     {selectedAsset.status === 'Available' ? 'Allocate Asset' : 'Submit Transfer Request'}

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Topbar from '@/components/Topbar';
-import layoutStyles from '../page.module.css';
+import Sidebar from '@/components/layout/Sidebar';
+import Topbar from '@/components/layout/Topbar';
+import layoutStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './maintenance.module.css';
 
 type KanbanStatus = 'Pending' | 'Approved' | 'In Progress' | 'Resolved';
@@ -19,13 +19,29 @@ const columns: { key: KanbanStatus; label: string; color: string; bg: string }[]
 
 const priorityColor = { High: '#e17055', Medium: '#e67e22', Low: '#00b894' };
 
-import { useMockData } from '@/context/MockDataContext';
-import { MaintenanceRequest } from '@/lib/mockDb';
+import { MaintenanceRequest } from '@prisma/client';
 import Modal from '@/components/ui/Modal';
+
 import { useToast } from '@/context/ToastContext';
 
 export default function MaintenancePage() {
-  const { maintenanceRequests, setMaintenanceRequests, assets, setAssets, employees, addActivityLog } = useMockData();
+  const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
+  const [assets, setAssets] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    Promise.all([
+      fetch('/api/maintenance').then(res => res.json()),
+      fetch('/api/assets').then(res => res.json()),
+      fetch('/api/employees').then(res => res.json())
+    ]).then(([m, a, e]) => {
+      if (Array.isArray(m)) setMaintenanceRequests(m);
+      if (Array.isArray(a)) setAssets(a);
+      if (Array.isArray(e)) setEmployees(e);
+    });
+  }, []);
+
+  const addActivityLog = (text: string, type: string) => { console.log("Activity Log:", text, type); };
   const { showToast } = useToast();
   
   const [dragCard, setDragCard] = useState<{ card: MaintenanceRequest; from: string } | null>(null);
@@ -37,22 +53,37 @@ export default function MaintenancePage() {
     setDragCard({ card, from });
   };
 
-  const handleDrop = (to: KanbanStatus) => {
+  const handleDrop = async (to: KanbanStatus) => {
     if (!dragCard || dragCard.from === to) return;
     
-    // Update the request status
-    setMaintenanceRequests(prev => prev.map(r => r.id === dragCard.card.id ? { ...r, status: to } : r));
-    
-    // Auto-update Asset status based on Maintenance status
-    const reqAsset = assets.find(a => a.id === dragCard.card.assetId);
-    if (reqAsset) {
-      if ((to === 'Approved' || to === 'In Progress') && reqAsset.status !== 'Under Maintenance') {
-        setAssets(prev => prev.map(a => a.id === reqAsset.id ? { ...a, status: 'Under Maintenance', history: [`Under maintenance: ${dragCard.card.issue}`, ...a.history] } : a));
-        addActivityLog(`${reqAsset.name} moved to Under Maintenance`, 'Maintenance');
-      } else if (to === 'Resolved' && reqAsset.status === 'Under Maintenance') {
-        setAssets(prev => prev.map(a => a.id === reqAsset.id ? { ...a, status: 'Available', history: [`Maintenance resolved: ${dragCard.card.issue}`, ...a.history] } : a));
-        addActivityLog(`${reqAsset.name} is now Available after maintenance`, 'Maintenance');
+    try {
+      const res = await fetch(`/api/maintenance/${dragCard.card.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: to })
+      });
+
+      if (res.ok) {
+        const updatedReq = await res.json();
+        setMaintenanceRequests(prev => prev.map(r => r.id === updatedReq.id ? updatedReq : r));
+        
+        // Auto-update Asset status locally to match backend logic
+        const reqAsset = assets.find(a => a.id === dragCard.card.assetId);
+        if (reqAsset) {
+          if ((to === 'Approved' || to === 'In Progress') && reqAsset.status !== 'Under Maintenance') {
+            setAssets(prev => prev.map(a => a.id === reqAsset.id ? { ...a, status: 'Under Maintenance', history: [`Under maintenance: ${dragCard.card.issue}`, ...a.history] } : a));
+            addActivityLog(`${reqAsset.name} moved to Under Maintenance`, 'Maintenance');
+          } else if (to === 'Resolved' && reqAsset.status === 'Under Maintenance') {
+            setAssets(prev => prev.map(a => a.id === reqAsset.id ? { ...a, status: 'Available', history: [`Maintenance resolved: ${dragCard.card.issue}`, ...a.history] } : a));
+            addActivityLog(`${reqAsset.name} is now Available after maintenance`, 'Maintenance');
+          }
+        }
+      } else {
+        showToast('Failed to update request', 'error');
       }
+    } catch (err) {
+      console.error(err);
+      showToast('Error updating request', 'error');
     }
     
     setDragCard(null);
@@ -162,25 +193,39 @@ export default function MaintenancePage() {
         footer={
           <>
             <button className={layoutStyles.btnSecondary} onClick={() => setIsModalOpen(false)}>Cancel</button>
-            <button className={layoutStyles.btnPrimary} onClick={() => {
+            <button className={layoutStyles.btnPrimary} onClick={async () => {
               if (!newRequest.assetId || !newRequest.issue) {
                 showToast('Asset and Issue are required.', 'error');
                 return;
               }
-              const newMaintenance: MaintenanceRequest = {
-                id: 'm' + Date.now(),
-                assetId: newRequest.assetId,
-                requestedBy: 'e1',
-                issue: newRequest.issue,
-                priority: newRequest.priority as any,
-                status: 'Pending',
-                date: new Date().toISOString()
-              };
-              setMaintenanceRequests(prev => [newMaintenance, ...prev]);
-              addActivityLog(`New maintenance request for ${assets.find(a => a.id === newRequest.assetId)?.name}`, 'Maintenance');
-              showToast('Maintenance request submitted successfully!');
-              setIsModalOpen(false);
-              setNewRequest({ assetId: '', issue: '', priority: 'Medium' });
+              
+              try {
+                const res = await fetch('/api/maintenance', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    assetId: newRequest.assetId,
+                    requestedBy: 'e1',
+                    issue: newRequest.issue,
+                    priority: newRequest.priority,
+                    status: 'Pending'
+                  })
+                });
+
+                if (res.ok) {
+                  const newMaintenance = await res.json();
+                  setMaintenanceRequests(prev => [newMaintenance, ...prev]);
+                  addActivityLog(`New maintenance request for ${assets.find(a => a.id === newRequest.assetId)?.name}`, 'Maintenance');
+                  showToast('Maintenance request submitted successfully!');
+                  setIsModalOpen(false);
+                  setNewRequest({ assetId: '', issue: '', priority: 'Medium' });
+                } else {
+                  showToast('Failed to create maintenance request', 'error');
+                }
+              } catch (err) {
+                console.error(err);
+                showToast('An error occurred', 'error');
+              }
             }}>Submit Request</button>
           </>
         }

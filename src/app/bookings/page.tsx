@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Topbar from '@/components/Topbar';
-import layoutStyles from '../page.module.css';
+import Sidebar from '@/components/layout/Sidebar';
+import Topbar from '@/components/layout/Topbar';
+import layoutStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './bookings.module.css';
-import { useMockData } from '@/context/MockDataContext';
-import { Asset } from '@/lib/mockDb';
+
+import { Asset } from '@prisma/client';
 
 const timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
@@ -21,7 +21,21 @@ const days = Array.from({ length: 5 }, (_, i) => {
 
 
 export default function BookingsPage() {
-  const { assets, bookings, setBookings, addActivityLog } = useMockData();
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/assets').then(res => res.json()),
+      fetch('/api/bookings').then(res => res.json())
+    ]).then(([a, b]) => {
+      if (Array.isArray(a)) setAssets(a);
+      if (Array.isArray(b)) setBookings(b);
+    });
+  }, []);
+
+  const addActivityLog = (text: string, type: string) => { console.log("Activity Log:", text, type); };
+
   const bookableAssets = assets.filter(a => a.isSharedBookable);
   
   const [selectedRoom, setSelectedRoom] = useState<Asset | null>(null);
@@ -54,24 +68,41 @@ export default function BookingsPage() {
     return isBooked ? 'booked' : null;
   };
 
-  const handleBook = () => {
+  const handleBook = async () => {
     if (selectedSlot && selectedRoom) {
       const date = days[selectedDay];
       const slotHour = parseInt(selectedSlot.split(':')[0]);
       date.setHours(slotHour, 0, 0, 0);
       
-      const newBooking = {
-        id: 'b' + Date.now(),
-        assetId: selectedRoom.id,
-        employeeId: 'e1', // Assume current user
-        startTime: date.toISOString(),
-        endTime: new Date(date.getTime() + 60 * 60 * 1000).toISOString(),
-        status: 'Upcoming' as const
-      };
-      
-      setBookings(prev => [...prev, newBooking]);
-      addActivityLog(`Booked ${selectedRoom.name} for ${date.toLocaleDateString()} at ${selectedSlot}`, 'Booking');
-      setBooked(true);
+      const startTime = date.toISOString();
+      const endTime = new Date(date.getTime() + 60 * 60 * 1000).toISOString();
+
+      try {
+        const res = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assetId: selectedRoom.id,
+            employeeId: 'e1', // Mocking current user since auth wasn't hooked into UI fully
+            startTime,
+            endTime,
+            status: 'Upcoming'
+          })
+        });
+
+        if (res.ok) {
+          const newBooking = await res.json();
+          setBookings(prev => [...prev, newBooking]);
+          addActivityLog(`Booked ${selectedRoom.name} for ${date.toLocaleDateString()} at ${selectedSlot}`, 'Booking');
+          setBooked(true);
+        } else {
+          const errorData = await res.json();
+          alert(errorData.error || 'Failed to create booking');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('An unexpected error occurred');
+      }
     }
   };
 

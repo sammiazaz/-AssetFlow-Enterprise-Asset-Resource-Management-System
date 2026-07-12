@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Topbar from '@/components/Topbar';
-import layoutStyles from '../page.module.css';
+import Sidebar from '@/components/layout/Sidebar';
+import Topbar from '@/components/layout/Topbar';
+import layoutStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './audit.module.css';
 
-import { useMockData } from '@/context/MockDataContext';
+
 import { useToast } from '@/context/ToastContext';
 
 type VerificationStatus = 'verified' | 'missing' | 'damaged' | null;
@@ -18,7 +18,15 @@ const statusConfig = {
 };
 
 export default function AuditPage() {
-  const { assets, setAssets, addActivityLog } = useMockData();
+  const [assets, setAssets] = useState<any[]>([]);
+  
+  React.useEffect(() => {
+    fetch('/api/assets').then(res => res.json()).then(data => {
+      if (Array.isArray(data)) setAssets(data);
+    });
+  }, []);
+
+  const addActivityLog = (text: string, type: string) => { console.log("Activity Log:", text, type); };
   const { showToast } = useToast();
   
   const [auditStatuses, setAuditStatuses] = useState<Record<string, VerificationStatus>>({});

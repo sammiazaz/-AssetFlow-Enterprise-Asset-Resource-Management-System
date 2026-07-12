@@ -1,28 +1,61 @@
 "use client";
 
-import React, { useState } from 'react';
-import layoutStyles from '../page.module.css';
+import React, { useState, useEffect } from 'react';
+import layoutStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './assets.module.css';
-import Sidebar from '@/components/Sidebar';
-import Topbar from '@/components/Topbar';
-import { useMockData } from '@/context/MockDataContext';
+import Sidebar from '@/components/layout/Sidebar';
+import Topbar from '@/components/layout/Topbar';
 import { useToast } from '@/context/ToastContext';
 import StatusBadge from '@/components/ui/StatusBadge';
 import Modal from '@/components/ui/Modal';
 import Drawer from '@/components/ui/Drawer';
-import { Asset } from '@/lib/mockDb';
+import { Asset } from '@prisma/client';
+
+type UIAsset = Omit<Asset, 'history'> & { history: string[] };
 
 export default function AssetDirectory() {
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   
-  const { assets, setAssets, categories, departments } = useMockData();
+  const [assets, setAssets] = useState<UIAsset[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/assets').then(res => res.json()),
+      fetch('/api/categories').then(res => res.json()),
+      fetch('/api/departments').then(res => res.json())
+    ]).then(([a, c, d]) => {
+      if (Array.isArray(a)) setAssets(a);
+      if (Array.isArray(c)) setCategories(c);
+      if (Array.isArray(d)) setDepartments(d);
+    });
+  }, []);
   const { showToast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newAsset, setNewAsset] = useState({ name: '', tag: '', categoryId: '', location: '', serialNumber: '', condition: 'Good', isSharedBookable: false });
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<UIAsset | null>(null);
+
+  const filteredAssets = React.useMemo(() => {
+    return assets.filter(a => {
+      if (search && !a.name.toLowerCase().includes(search.toLowerCase()) && !a.tag.toLowerCase().includes(search.toLowerCase())) return false;
+      if (filterCategory && a.categoryId !== filterCategory) return false;
+      if (filterStatus && a.status !== filterStatus) return false;
+      return true;
+    });
+  }, [assets, search, filterCategory, filterStatus]);
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
+  const paginatedAssets = filteredAssets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterCategory, filterStatus]);
 
   return (
     <div className={layoutStyles.layout}>
@@ -72,18 +105,19 @@ export default function AssetDirectory() {
             
             <select 
               className={styles.filterChip} 
-              style={{ borderColor: activeFilter === 'category' ? 'var(--color-primary)' : '' }}
-              value={activeFilter === 'category' ? 'IT Equipment' : ''}
-              onChange={e => setActiveFilter(e.target.value ? 'category' : null)}
+              style={{ borderColor: filterCategory ? 'var(--color-primary)' : '' }}
+              value={filterCategory}
+              onChange={e => setFilterCategory(e.target.value)}
             >
               <option value="">Category: All</option>
-              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             
             <select 
               className={styles.filterChip}
-              style={{ borderColor: activeFilter === 'status' ? 'var(--color-primary)' : '' }}
-              onChange={e => setActiveFilter(e.target.value ? 'status' : null)}
+              style={{ borderColor: filterStatus ? 'var(--color-primary)' : '' }}
+              value={filterStatus}
+              onChange={e => setFilterStatus(e.target.value)}
             >
               <option value="">Status: Any</option>
               <option value="Available">Available</option>
@@ -93,7 +127,7 @@ export default function AssetDirectory() {
             
             <div className={layoutStyles.dividerVertical}></div>
             
-            <button className={styles.clearFilters} onClick={() => { setActiveFilter(null); setSearch(''); }}>Clear Filters</button>
+            <button className={styles.clearFilters} onClick={() => { setFilterCategory(''); setFilterStatus(''); setSearch(''); }}>Clear Filters</button>
           </div>
         </section>
 
@@ -111,11 +145,7 @@ export default function AssetDirectory() {
               </tr>
             </thead>
             <tbody>
-              {assets.filter(a => {
-                if (search && !a.name.toLowerCase().includes(search.toLowerCase()) && !a.tag.toLowerCase().includes(search.toLowerCase())) return false;
-                // Basic filter logic, for full implementation it needs to map category strings to IDs or we just skip detailed filtering for brevity in prototype
-                return true;
-              }).map(asset => {
+              {paginatedAssets.map(asset => {
                 const category = categories.find(c => c.id === asset.categoryId);
                 
                 return (
@@ -160,7 +190,7 @@ export default function AssetDirectory() {
           {/* PAGINATION */}
           <div className={styles.pagination}>
             <p className="body-md" style={{ color: 'var(--color-on-surface-variant)' }}>
-              Showing <span style={{ fontWeight: 700 }}>4</span> of <span style={{ fontWeight: 700 }}>1,248</span> assets
+              Showing <span style={{ fontWeight: 700 }}>{paginatedAssets.length}</span> of <span style={{ fontWeight: 700 }}>{filteredAssets.length}</span> assets
             </p>
             <div className={styles.pageControls}>
               <button 
@@ -171,28 +201,39 @@ export default function AssetDirectory() {
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 18 }}>chevron_left</span>
               </button>
-              <button 
-                className={`${styles.pageBtn} ${currentPage === 1 ? styles.pageBtnActive : ''}`}
-                onClick={() => setCurrentPage(1)}
-              >1</button>
-              <button 
-                className={`${styles.pageBtn} ${currentPage === 2 ? styles.pageBtnActive : ''}`}
-                onClick={() => setCurrentPage(2)}
-              >2</button>
-              <button 
-                className={`${styles.pageBtn} ${currentPage === 3 ? styles.pageBtnActive : ''}`}
-                onClick={() => setCurrentPage(3)}
-              >3</button>
-              <span style={{ display: 'flex', alignItems: 'center', padding: '0 4px', color: 'var(--color-outline)' }}>...</span>
-              <button 
-                className={`${styles.pageBtn} ${currentPage === 42 ? styles.pageBtnActive : ''}`}
-                onClick={() => setCurrentPage(42)}
-              >42</button>
+              
+              {/* Dynamic Page Buttons */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                // Logic to show a window of pages around currentPage
+                let pageNum = i + 1;
+                if (totalPages > 5) {
+                   if (currentPage > 3) {
+                      pageNum = currentPage - 2 + i;
+                      if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                   }
+                }
+                if (pageNum > totalPages) return null;
+                
+                return (
+                  <button 
+                    key={pageNum}
+                    className={`${styles.pageBtn} ${currentPage === pageNum ? styles.pageBtnActive : ''}`}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <span style={{ display: 'flex', alignItems: 'center', padding: '0 4px', color: 'var(--color-outline)' }}>...</span>
+              )}
+              
               <button 
                 className={styles.pageBtn}
-                disabled={currentPage === 42}
-                style={{ opacity: currentPage === 42 ? 0.5 : 1 }}
-                onClick={() => setCurrentPage(prev => Math.min(42, prev + 1))}
+                disabled={currentPage >= totalPages || totalPages === 0}
+                style={{ opacity: (currentPage >= totalPages || totalPages === 0) ? 0.5 : 1 }}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 18 }}>chevron_right</span>
               </button>
@@ -265,22 +306,33 @@ export default function AssetDirectory() {
         footer={
           <>
             <button className={layoutStyles.btnSecondary} onClick={() => setIsModalOpen(false)}>Cancel</button>
-            <button className={layoutStyles.btnPrimary} onClick={() => {
+            <button className={layoutStyles.btnPrimary} onClick={async () => {
               if (!newAsset.name || !newAsset.tag) {
                 showToast('Name and Tag are required.', 'error');
                 return;
               }
-              setAssets(prev => [{
-                ...newAsset,
-                id: 'a' + Date.now(),
-                status: 'Available',
-                acquisitionDate: new Date().toISOString().split('T')[0],
-                acquisitionCost: 0,
-                history: []
-              } as any, ...prev]);
-              showToast('Asset registered successfully!');
-              setIsModalOpen(false);
-              setNewAsset({ name: '', tag: '', categoryId: '', location: '', serialNumber: '', condition: 'Good', isSharedBookable: false });
+              const res = await fetch('/api/assets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  ...newAsset,
+                  status: 'Available',
+                  acquisitionDate: new Date().toISOString().split('T')[0],
+                  acquisitionCost: 0,
+                  history: []
+                })
+              });
+              if (res.ok) {
+                const createdAsset = await res.json();
+                setAssets(prev => [createdAsset, ...prev]);
+                showToast('Asset registered successfully!');
+                setIsModalOpen(false);
+                setNewAsset({ name: '', tag: '', categoryId: '', location: '', serialNumber: '', condition: 'Good', isSharedBookable: false });
+              } else {
+                const errorData = await res.json().catch(() => ({}));
+                console.error("Asset registration error:", errorData);
+                showToast(`Failed to register asset. ${errorData.details || errorData.error || 'Ensure tag is unique.'}`, 'error');
+              }
             }}>Register Asset</button>
           </>
         }

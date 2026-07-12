@@ -1,17 +1,14 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { AuthService } from '@/server/services/AuthService';
 
 export async function GET(request: Request) {
   try {
     let token = '';
 
-    // Check Authorization header first
     const authHeader = request.headers.get('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
     } else {
-      // Fallback to cookie
       const cookieHeader = request.headers.get('cookie') || '';
       const match = cookieHeader.match(/token=([^;]+)/);
       if (match) {
@@ -20,43 +17,16 @@ export async function GET(request: Request) {
     }
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify token
-    const decoded = verifyToken(token);
-    if (!decoded) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
-
-    // Get user from database
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      include: {
-        department: true,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 401 }
-      );
-    }
-
-    const { password: _, ...userWithoutPassword } = user;
+    const userWithoutPassword = await AuthService.getCurrentUser(token);
     return NextResponse.json({ user: userWithoutPassword });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Auth check error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    if (error.message === 'Invalid or expired token' || error.message === 'User not found') {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
