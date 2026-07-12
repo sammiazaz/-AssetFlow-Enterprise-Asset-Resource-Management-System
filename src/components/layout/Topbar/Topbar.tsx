@@ -3,13 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from '@/app/dashboard/dashboard.module.css';
+import Modal from '@/components/ui/Modal';
+import { useToast } from '@/context/ToastContext';
 
 interface TopbarProps {
   title?: string;
 }
 
 export default function Topbar({ title }: TopbarProps) {
+  const { showToast } = useToast();
   const [hasUnread, setHasUnread] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/notifications')
@@ -51,11 +55,11 @@ export default function Topbar({ title }: TopbarProps) {
             }} />
           )}
         </Link>
-        <button className={styles.helpBtn} title="Settings">
+        <button className={styles.helpBtn} title="Settings" onClick={() => setIsSettingsOpen(true)}>
           <span className="material-symbols-outlined">settings</span>
         </button>
         <div className={styles.dividerVertical} />
-        <div className={styles.userProfile}>
+        <Link href="/profile" className={styles.userProfile} style={{ textDecoration: 'none' }}>
           <div className={styles.userAvatar}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -67,8 +71,27 @@ export default function Topbar({ title }: TopbarProps) {
             <p className={styles.userName}>Admin User</p>
             <p className={styles.userRole}>System Administrator</p>
           </div>
-        </div>
+        </Link>
       </div>
+
+      <Modal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        title="Settings"
+        width="420px"
+        footer={
+          <button className={styles.btnPrimary} onClick={() => { showToast('Preferences are ready for the next release.'); setIsSettingsOpen(false); }}>
+            Close
+          </button>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ margin: 0, color: 'var(--color-on-surface-variant)' }}>Notification preferences, theme controls, and account settings will appear here in future updates.</p>
+          <div style={{ padding: 12, borderRadius: 10, background: '#f8fafc', color: '#334155' }}>
+            Current access level: System Administrator
+          </div>
+        </div>
+      </Modal>
     </header>
   );
 }

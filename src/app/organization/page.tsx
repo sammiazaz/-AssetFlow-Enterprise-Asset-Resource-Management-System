@@ -32,7 +32,29 @@ export default function OrganizationSetup() {
   const { showToast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', detail: '' });
+
+  const resetModal = () => {
+    setIsModalOpen(false);
+    setEditingId(null);
+    setFormData({ name: '', detail: '' });
+  };
+
+  const openCreateModal = () => {
+    setEditingId(null);
+    setFormData({ name: '', detail: '' });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (item: any) => {
+    setEditingId(item.id);
+    setFormData({
+      name: item.name || '',
+      detail: activeTab === 'categories' ? (item.fields || []).join(', ') : activeTab === 'employees' ? item.email : item.detail || '',
+    });
+    setIsModalOpen(true);
+  };
 
   return (
     <div className={layoutStyles.layout}>
@@ -85,10 +107,7 @@ export default function OrganizationSetup() {
           <button 
             className={`${styles.btnPrimary} label-md`} 
             style={{ marginLeft: 'auto' }}
-            onClick={() => {
-              setFormData({ name: '', detail: '' });
-              setIsModalOpen(true);
-            }}
+            onClick={openCreateModal}
           >
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>add</span>
             New {activeTab === 'departments' ? 'Department' : activeTab === 'categories' ? 'Category' : 'Employee'}
@@ -132,7 +151,7 @@ export default function OrganizationSetup() {
                           <StatusBadge status={dept.status} />
                         </td>
                         <td className={styles.td} style={{ textAlign: 'right' }}>
-                          <button className={styles.actionBtn}>
+                          <button className={styles.actionBtn} onClick={() => openEditModal(dept)} title="Edit department">
                             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>edit</span>
                           </button>
                         </td>
@@ -160,7 +179,7 @@ export default function OrganizationSetup() {
                       </td>
                       <td className={`${styles.td} body-md`} style={{ color: 'var(--color-on-surface-variant)' }}>{cat.fields.join(', ')}</td>
                       <td className={styles.td} style={{ textAlign: 'right' }}>
-                        <button className={styles.actionBtn}>
+                        <button className={styles.actionBtn} onClick={() => openEditModal(cat)} title="Edit category">
                           <span className="material-symbols-outlined" style={{ fontSize: 20 }}>edit</span>
                         </button>
                       </td>
@@ -225,50 +244,56 @@ export default function OrganizationSetup() {
 
       <Modal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title={`New ${activeTab === 'departments' ? 'Department' : activeTab === 'categories' ? 'Category' : 'Employee'}`}
+        onClose={resetModal} 
+        title={`${editingId ? 'Edit' : 'New'} ${activeTab === 'departments' ? 'Department' : activeTab === 'categories' ? 'Category' : 'Employee'}`}
         footer={
           <>
-            <button className={styles.btnSecondary} onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button className={styles.btnSecondary} onClick={resetModal}>Cancel</button>
             <button className={styles.btnPrimary} onClick={async () => {
                if (activeTab === 'departments') {
-                 const res = await fetch('/api/departments', {
-                   method: 'POST',
+                 const endpoint = editingId ? `/api/departments/${editingId}` : '/api/departments';
+                 const method = editingId ? 'PUT' : 'POST';
+                 const res = await fetch(endpoint, {
+                   method,
                    headers: { 'Content-Type': 'application/json' },
                    body: JSON.stringify({ name: formData.name, headId: null, parentId: null, status: 'Active' })
                  });
                  if (res.ok) {
-                   const newDept = await res.json();
-                   setDepartments(prev => [...prev, newDept]);
-                   showToast('Department created successfully!');
+                   const savedDept = await res.json();
+                   setDepartments(prev => editingId ? prev.map(d => d.id === editingId ? savedDept : d) : [...prev, savedDept]);
+                   showToast(editingId ? 'Department updated successfully!' : 'Department created successfully!');
                  }
                } else if (activeTab === 'categories') {
-                 const res = await fetch('/api/categories', {
-                   method: 'POST',
+                 const endpoint = editingId ? `/api/categories/${editingId}` : '/api/categories';
+                 const method = editingId ? 'PUT' : 'POST';
+                 const res = await fetch(endpoint, {
+                   method,
                    headers: { 'Content-Type': 'application/json' },
                    body: JSON.stringify({ name: formData.name, fields: formData.detail.split(',').map(f => f.trim()) })
                  });
                  if (res.ok) {
-                   const newCat = await res.json();
-                   setCategories(prev => [...prev, newCat]);
-                   showToast('Category created successfully!');
+                   const savedCat = await res.json();
+                   setCategories(prev => editingId ? prev.map(c => c.id === editingId ? savedCat : c) : [...prev, savedCat]);
+                   showToast(editingId ? 'Category updated successfully!' : 'Category created successfully!');
                  }
                } else {
-                 const res = await fetch('/api/employees', {
-                   method: 'POST',
+                 const endpoint = editingId ? `/api/employees/${editingId}` : '/api/employees';
+                 const method = editingId ? 'PUT' : 'POST';
+                 const res = await fetch(endpoint, {
+                   method,
                    headers: { 'Content-Type': 'application/json' },
                    body: JSON.stringify({ name: formData.name, email: formData.detail, departmentId: null, role: 'Employee', status: 'Active' })
                  });
                  if (res.ok) {
-                   const newEmp = await res.json();
-                   setEmployees(prev => [...prev, newEmp]);
-                   showToast('Employee created successfully!');
+                   const savedEmp = await res.json();
+                   setEmployees(prev => editingId ? prev.map(e => e.id === editingId ? savedEmp : e) : [...prev, savedEmp]);
+                   showToast(editingId ? 'Employee updated successfully!' : 'Employee created successfully!');
                  } else {
-                   showToast('Failed to create employee (Email might exist).');
+                   showToast(editingId ? 'Failed to update employee.' : 'Failed to create employee (Email might exist).');
                  }
                }
-               setIsModalOpen(false);
-            }}>Save</button>
+               resetModal();
+            }}>{editingId ? 'Update' : 'Save'}</button>
           </>
         }
       >

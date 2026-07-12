@@ -40,6 +40,34 @@ export default function AssetDirectory() {
   const [newAsset, setNewAsset] = useState({ name: '', tag: '', categoryId: '', location: '', serialNumber: '', condition: 'Good', isSharedBookable: false });
   const [selectedAsset, setSelectedAsset] = useState<UIAsset | null>(null);
 
+  const handleExportCsv = () => {
+    if (filteredAssets.length === 0) {
+      showToast('No assets available to export.', 'info');
+      return;
+    }
+
+    const rows = [
+      ['Tag', 'Name', 'Category', 'Status', 'Location', 'Serial Number'],
+      ...filteredAssets.map((asset) => {
+        const category = categories.find((c) => c.id === asset.categoryId)?.name || '';
+        return [asset.tag, asset.name, category, asset.status, asset.location, asset.serialNumber];
+      }),
+    ];
+
+    const csv = rows
+      .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'asset-directory.csv';
+    link.click();
+    window.URL.revokeObjectURL(url);
+    showToast('Asset directory exported as CSV.');
+  };
+
   const filteredAssets = React.useMemo(() => {
     return assets.filter(a => {
       if (search && !a.name.toLowerCase().includes(search.toLowerCase()) && !a.tag.toLowerCase().includes(search.toLowerCase())) return false;
@@ -86,7 +114,7 @@ export default function AssetDirectory() {
                   }}
                 />
               </div>
-              <button className={styles.iconBtn} onClick={() => alert("Download CSV")} title="Download CSV">
+              <button className={styles.iconBtn} onClick={handleExportCsv} title="Export CSV">
                 <span className="material-symbols-outlined">download</span>
               </button>
               <button 
@@ -284,7 +312,13 @@ export default function AssetDirectory() {
               </div>
             </div>
             
-            <button style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: 'var(--color-secondary)', color: 'var(--color-on-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(70, 72, 212, 0.3)' }}>
+            <button
+              onClick={() => {
+                setIsModalOpen(true);
+                showToast('Asset registration form opened.');
+              }}
+              style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: 'var(--color-secondary)', color: 'var(--color-on-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(70, 72, 212, 0.3)' }}
+            >
               <span className="material-symbols-outlined">arrow_forward</span>
             </button>
           </div>
@@ -293,7 +327,7 @@ export default function AssetDirectory() {
       </main>
 
       {/* FLOATING ACTION BUTTON */}
-      <button className={styles.fab}>
+      <button className={styles.fab} onClick={() => setIsModalOpen(true)} title="Register Asset">
         <span className="material-symbols-outlined" style={{ fontSize: 28 }}>add</span>
       </button>
 

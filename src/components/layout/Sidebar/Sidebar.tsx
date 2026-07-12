@@ -6,7 +6,7 @@ import styles from '@/app/dashboard/dashboard.module.css';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: 'dashboard' },
-  { href: '/organization-setup', label: 'Organization', icon: 'corporate_fare' },
+  { href: '/organization', label: 'Organization', icon: 'corporate_fare' },
   { href: '/assets', label: 'Assets', icon: 'inventory_2' },
   { href: '/allocation', label: 'Allocation & Transfer', icon: 'move_up' },
   { href: '/bookings', label: 'Resource Booking', icon: 'calendar_today' },
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/audit', label: 'Audit', icon: 'fact_check' },
   { href: '/reports', label: 'Reports', icon: 'analytics' },
   { href: '/notifications', label: 'Notifications', icon: 'notifications' },
+  { href: '/profile', label: 'My Profile', icon: 'person' },
 ];
 
 export default function Sidebar() {

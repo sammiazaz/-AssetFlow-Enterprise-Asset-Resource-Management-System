@@ -45,8 +45,8 @@ export default function Dashboard() {
       { label: 'Allocated', value: dashboardStats.allocatedAssets.toString(), icon: 'person', color: '#00b894', bg: '#d4f5ee', href: '/allocation' },
       { label: 'Under Maintenance', value: dashboardStats.underMaintenanceAssets.toString(), icon: 'build', color: '#e67e22', bg: '#fff3e0', href: '/maintenance' },
       { label: 'Active Bookings', value: dashboardStats.activeBookings.toString(), icon: 'calendar_today', color: '#e17055', bg: '#fff0ec', href: '/bookings' },
-      { label: 'Departments', value: dashboardStats.departmentCount.toString(), icon: 'business', color: '#0984e3', bg: '#eef5ff', href: '/organization-setup' },
-      { label: 'Employees', value: dashboardStats.employeeCount.toString(), icon: 'groups', color: '#fdcb6e', bg: '#fffceb', href: '/organization-setup' },
+      { label: 'Departments', value: dashboardStats.departmentCount.toString(), icon: 'business', color: '#0984e3', bg: '#eef5ff', href: '/organization' },
+      { label: 'Employees', value: dashboardStats.employeeCount.toString(), icon: 'groups', color: '#fdcb6e', bg: '#fffceb', href: '/organization' },
     ];
   }, [dashboardStats]);
 

@@ -7,6 +7,7 @@ import layoutStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './bookings.module.css';
 
 import { Asset } from '@prisma/client';
+import { useToast } from '@/context/ToastContext';
 
 const timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
@@ -21,6 +22,7 @@ const days = Array.from({ length: 5 }, (_, i) => {
 
 
 export default function BookingsPage() {
+  const { showToast } = useToast();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
 
@@ -95,13 +97,14 @@ export default function BookingsPage() {
           setBookings(prev => [...prev, newBooking]);
           addActivityLog(`Booked ${selectedRoom.name} for ${date.toLocaleDateString()} at ${selectedSlot}`, 'Booking');
           setBooked(true);
+          showToast('Booking confirmed successfully.');
         } else {
           const errorData = await res.json();
-          alert(errorData.error || 'Failed to create booking');
+          showToast(errorData.error || 'Failed to create booking', 'error');
         }
       } catch (err) {
         console.error(err);
-        alert('An unexpected error occurred');
+        showToast('An unexpected error occurred', 'error');
       }
     }
   };

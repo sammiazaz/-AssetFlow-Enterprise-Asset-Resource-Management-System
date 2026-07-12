@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
 import layoutStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './reports.module.css';
+import { useToast } from '@/context/ToastContext';
 
 import {
   BarChart,
@@ -21,6 +23,8 @@ import {
 } from 'recharts';
 
 export default function ReportsPage() {
+  const router = useRouter();
+  const { showToast } = useToast();
   const [reportsData, setReportsData] = React.useState<any>({
     deptData: [],
     mostUsed: [],
@@ -50,13 +54,13 @@ export default function ReportsPage() {
             <p className={layoutStyles.pageSubtitle}>Utilization, maintenance frequency, and asset health insights</p>
           </div>
           <div className={layoutStyles.headerActions}>
-            <button className={layoutStyles.btnSecondary}>
+            <button className={layoutStyles.btnSecondary} onClick={() => { window.print(); showToast('Report preview opened for printing.'); }}>
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
               Export PDF
             </button>
-            <button className={layoutStyles.btnPrimary} style={{ textDecoration: 'none' }}>
+            <button className={layoutStyles.btnPrimary} style={{ textDecoration: 'none' }} onClick={() => { showToast('Latest report insights refreshed.'); }}>
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>summarize</span>
-              Report Report
+              Generate Summary
             </button>
           </div>
         </div>
@@ -151,7 +155,7 @@ export default function ReportsPage() {
                     <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-on-surface)' }}>{a.name}</p>
                     <p style={{ fontSize: 11, color: '#e17055', marginTop: 2 }}>Idle for {a.days} days</p>
                   </div>
-                  <button className={styles.reviewBtn}>Review</button>
+                  <button className={styles.reviewBtn} onClick={() => { showToast(`Review workflow for ${a.name} opened.`); router.push('/maintenance'); }}>Review</button>
                 </div>
               ))}
             </div>
