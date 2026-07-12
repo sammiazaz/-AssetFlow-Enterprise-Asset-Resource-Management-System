@@ -1,36 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
 import layoutStyles from '../page.module.css';
 import styles from './bookings.module.css';
-
-const rooms = [
-  { id: 'B2', name: 'Conference Room B2', capacity: 12, floor: '2nd Floor', amenities: ['Projector', 'Whiteboard', 'Video Conf'] },
-  { id: 'B3', name: 'Meeting Room B3', capacity: 6, floor: '2nd Floor', amenities: ['TV Screen', 'Whiteboard'] },
-  { id: 'T1', name: 'Training Hall T1', capacity: 40, floor: 'Ground Floor', amenities: ['Projector', 'Sound System'] },
-];
+import { useMockData } from '@/context/MockDataContext';
+import { Asset } from '@/lib/mockDb';
 
 const timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-
-// Mock booking data: slot => status
-const mockBookings: Record<string, Record<string, string>> = {
-  B2: {
-    '09:00': 'booked',
-    '10:00': 'booked',
-    '12:00': 'conflict',
-    '15:00': 'booked',
-  },
-  B3: {
-    '10:00': 'booked',
-    '14:00': 'booked',
-  },
-  T1: {
-    '09:00': 'booked',
-    '13:00': 'conflict',
-  },
-};
 
 const today = new Date();
 const formatDate = (d: Date) => d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -41,16 +19,60 @@ const days = Array.from({ length: 5 }, (_, i) => {
   return d;
 });
 
+
 export default function BookingsPage() {
-  const [selectedRoom, setSelectedRoom] = useState(rooms[0]);
+  const { assets, bookings, setBookings, addActivityLog } = useMockData();
+  const bookableAssets = assets.filter(a => a.isSharedBookable);
+  
+  const [selectedRoom, setSelectedRoom] = useState<Asset | null>(null);
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [booked, setBooked] = useState(false);
 
-  const roomBookings = mockBookings[selectedRoom.id] || {};
+  useEffect(() => {
+    if (bookableAssets.length > 0 && !selectedRoom) {
+      setSelectedRoom(bookableAssets[0]);
+    }
+  }, [bookableAssets, selectedRoom]);
+
+  // Compute booked slots for selected room and day
+  const roomBookings = bookings.filter(b => {
+    if (!selectedRoom) return false;
+    if (b.assetId !== selectedRoom.id) return false;
+    const bookingDateStr = new Date(b.startTime).toLocaleDateString('en-IN');
+    const selectedDateStr = days[selectedDay].toLocaleDateString('en-IN');
+    return bookingDateStr === selectedDateStr;
+  });
+
+  const getSlotStatus = (slot: string) => {
+    // Check if slot overlaps with any booking
+    const slotHour = parseInt(slot.split(':')[0]);
+    const isBooked = roomBookings.some(b => {
+      const bHour = new Date(b.startTime).getHours();
+      return bHour === slotHour;
+    });
+    return isBooked ? 'booked' : null;
+  };
 
   const handleBook = () => {
-    if (selectedSlot) setBooked(true);
+    if (selectedSlot && selectedRoom) {
+      const date = days[selectedDay];
+      const slotHour = parseInt(selectedSlot.split(':')[0]);
+      date.setHours(slotHour, 0, 0, 0);
+      
+      const newBooking = {
+        id: 'b' + Date.now(),
+        assetId: selectedRoom.id,
+        employeeId: 'e1', // Assume current user
+        startTime: date.toISOString(),
+        endTime: new Date(date.getTime() + 60 * 60 * 1000).toISOString(),
+        status: 'Upcoming' as const
+      };
+      
+      setBookings(prev => [...prev, newBooking]);
+      addActivityLog(`Booked ${selectedRoom.name} for ${date.toLocaleDateString()} at ${selectedSlot}`, 'Booking');
+      setBooked(true);
+    }
   };
 
   return (
@@ -68,31 +90,32 @@ export default function BookingsPage() {
         <div className={styles.grid}>
           {/* Room Selector */}
           <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Select Room</h2>
+            <h2 className={styles.cardTitle}>Select Room / Resource</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {rooms.map((room) => (
+              {bookableAssets.map((room) => (
                 <button
                   key={room.id}
-                  className={`${styles.roomItem} ${selectedRoom.id === room.id ? styles.roomItemActive : ''}`}
+                  className={`${styles.roomItem} ${selectedRoom?.id === room.id ? styles.roomItemActive : ''}`}
                   onClick={() => { setSelectedRoom(room); setSelectedSlot(null); setBooked(false); }}
                 >
                   <div className={styles.roomIcon}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#2e86de', fontVariationSettings: "'FILL' 1" }}>meeting_room</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#2e86de', fontVariationSettings: "'FILL' 1" }}>
+                      {room.categoryId === 'c3' ? 'directions_car' : room.categoryId === 'c2' ? 'meeting_room' : 'devices'}
+                    </span>
                   </div>
                   <div style={{ flex: 1, textAlign: 'left' }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: '#1e2a3a' }}>{room.name}</p>
-                    <p style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Capacity: {room.capacity} · {room.floor}</p>
+                    <p style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{room.location}</p>
                   </div>
                 </button>
               ))}
             </div>
 
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--color-outline-variant)' }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#888', marginBottom: 8 }}>AMENITIES</p>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#888', marginBottom: 8 }}>AMENITIES / DETAILS</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {selectedRoom.amenities.map(a => (
-                  <span key={a} className={styles.amenityTag}>{a}</span>
-                ))}
+                <span className={styles.amenityTag}>{selectedRoom?.categoryId === 'c3' ? 'Vehicle' : 'Room/Equipment'}</span>
+                <span className={styles.amenityTag}>{selectedRoom?.condition} Condition</span>
               </div>
             </div>
 
@@ -116,29 +139,30 @@ export default function BookingsPage() {
           </div>
 
           {/* Time Slot Calendar */}
-          <div className={styles.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>{selectedRoom.name}</h2>
-            </div>
+          {selectedRoom && (
+            <div className={styles.card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>{selectedRoom.name}</h2>
+              </div>
 
-            {/* Day Picker */}
-            <div className={styles.dayPicker}>
-              {days.map((d, i) => (
-                <button
-                  key={i}
-                  className={`${styles.dayBtn} ${selectedDay === i ? styles.dayBtnActive : ''}`}
-                  onClick={() => { setSelectedDay(i); setSelectedSlot(null); setBooked(false); }}
-                >
-                  <span style={{ fontSize: 11, opacity: 0.8 }}>{d.toLocaleDateString('en-IN', { weekday: 'short' })}</span>
-                  <span style={{ fontSize: 16, fontWeight: 700 }}>{d.getDate()}</span>
-                </button>
-              ))}
-            </div>
+              {/* Day Picker */}
+              <div className={styles.dayPicker}>
+                {days.map((d, i) => (
+                  <button
+                    key={i}
+                    className={`${styles.dayBtn} ${selectedDay === i ? styles.dayBtnActive : ''}`}
+                    onClick={() => { setSelectedDay(i); setSelectedSlot(null); setBooked(false); }}
+                  >
+                    <span style={{ fontSize: 11, opacity: 0.8 }} suppressHydrationWarning>{d.toLocaleDateString('en-IN', { weekday: 'short' })}</span>
+                    <span style={{ fontSize: 16, fontWeight: 700 }}>{d.getDate()}</span>
+                  </button>
+                ))}
+              </div>
 
-            {/* Time Slots */}
-            <div className={styles.slotsGrid}>
-              {timeSlots.map((slot) => {
-                const status = roomBookings[slot];
+              {/* Time Slots */}
+              <div className={styles.slotsGrid}>
+                {timeSlots.map((slot) => {
+                  const status = getSlotStatus(slot);
                 const isSelected = selectedSlot === slot;
                 return (
                   <button
@@ -186,12 +210,13 @@ export default function BookingsPage() {
               </button>
             )}
 
-            {selectedSlot && !booked && (
-              <p style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 8 }}>
-                Booking: {selectedRoom.name} · {formatDate(days[selectedDay])} · {selectedSlot}–{timeSlots[timeSlots.indexOf(selectedSlot) + 1] || '18:00'}
-              </p>
-            )}
-          </div>
+              {selectedSlot && !booked && (
+                <p style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 8 }}>
+                  Booking: {selectedRoom.name} · {formatDate(days[selectedDay])} · {selectedSlot}–{timeSlots[timeSlots.indexOf(selectedSlot) + 1] || '18:00'}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>

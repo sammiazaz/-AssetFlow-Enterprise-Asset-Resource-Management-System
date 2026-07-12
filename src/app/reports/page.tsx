@@ -1,40 +1,81 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
 import layoutStyles from '../page.module.css';
 import styles from './reports.module.css';
-
-const deptData = [
-  { dept: 'Engineering', value: 85, assets: 54 },
-  { dept: 'Facilities', value: 60, assets: 32 },
-  { dept: 'Marketing', value: 72, assets: 18 },
-  { dept: 'Field Ops', value: 45, assets: 14 },
-  { dept: 'Admin', value: 38, assets: 10 },
-];
-
-const mostUsed = [
-  { name: 'Projector B2', uses: 34, trips: 27, icon: 'videocam', color: '#2e86de' },
-  { name: 'Dell Laptop AF-0114', uses: 28, trips: 21, icon: 'laptop_mac', color: '#6c5ce7' },
-  { name: 'Camera Kit AF-0031', uses: 19, trips: 18, icon: 'photo_camera', color: '#00b894' },
-];
-
-const idleAssets = [
-  { name: 'Monitor AF-0092', days: 45, icon: 'monitor', color: '#e67e22' },
-  { name: 'Printer AF-0046', days: 38, icon: 'print', color: '#e17055' },
-  { name: 'Webcam AF-0071', days: 31, icon: 'videocam_off', color: '#e17055' },
-];
-
-const maintenanceDue = [
-  { name: 'Forklift AF-0087', due: 'overdue — due 4 days ago', urgent: true },
-  { name: 'Laptop AF-0023', due: '5 years old — nearing retirement', urgent: false },
-  { name: 'AC Unit AF-0051', due: 'service due in 12 days', urgent: false },
-];
-
-const maxBarValue = Math.max(...deptData.map(d => d.value));
+import { useMockData } from '@/context/MockDataContext';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+} from 'recharts';
 
 export default function ReportsPage() {
+  const { assets, bookings, maintenanceRequests, departments } = useMockData();
+
+  const deptData = useMemo(() => {
+    // calculate actual assets per department
+    return departments.map(d => {
+      const deptAssets = assets.filter(a => a.departmentId === d.id);
+      return {
+        dept: d.name,
+        value: Math.floor(Math.random() * 50) + 30, // simulated utilization %
+        assets: deptAssets.length,
+      };
+    });
+  }, [assets, departments]);
+
+  const maxBarValue = Math.max(...deptData.map(d => d.value), 100);
+
+  const mostUsed = useMemo(() => {
+    return assets.slice(0, 3).map((a, i) => ({
+      name: a.name,
+      uses: 30 - i * 5,
+      trips: 20 - i * 3,
+      icon: a.categoryId === 'c1' ? 'laptop_mac' : a.categoryId === 'c3' ? 'directions_car' : 'videocam',
+      color: i === 0 ? '#2e86de' : i === 1 ? '#6c5ce7' : '#00b894'
+    }));
+  }, [assets]);
+
+  const idleAssets = useMemo(() => {
+    return assets.filter(a => a.status === 'Available').slice(0, 3).map(a => ({
+      name: a.name,
+      days: Math.floor(Math.random() * 30) + 30,
+      icon: a.categoryId === 'c1' ? 'laptop_mac' : 'inventory_2',
+      color: '#e17055'
+    }));
+  }, [assets]);
+
+  const maintenanceDue = useMemo(() => {
+    return maintenanceRequests.filter(m => m.status === 'Pending').slice(0, 3).map(m => {
+      const a = assets.find(x => x.id === m.assetId);
+      return {
+        name: a ? a.name : 'Unknown',
+        due: m.issue,
+        urgent: m.priority === 'High'
+      };
+    });
+  }, [maintenanceRequests, assets]);
+
+  const chartData = [
+    { name: 'Jan', value: 45 },
+    { name: 'Feb', value: 50 },
+    { name: 'Mar', value: 55 },
+    { name: 'Apr', value: 40 },
+    { name: 'May', value: 65 },
+    { name: 'Jun', value: 75 },
+    { name: 'Jul', value: 85 },
+  ];
   return (
     <div className={layoutStyles.layout}>
       <Sidebar />
@@ -62,55 +103,38 @@ export default function ReportsPage() {
           {/* Utilization Bar Chart */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Utilization by Department</h2>
-            <div className={styles.barChart}>
-              {deptData.map((d) => (
-                <div key={d.dept} className={styles.barGroup}>
-                  <div className={styles.barLabel}>{d.dept}</div>
-                  <div className={styles.barTrack}>
-                    <div
-                      className={styles.barFill}
-                      style={{
-                        width: `${(d.value / maxBarValue) * 100}%`,
-                        backgroundColor: d.value > 70 ? '#2e86de' : d.value > 50 ? '#6c5ce7' : '#e17055'
-                      }}
-                    />
-                    <span className={styles.barValue}>{d.value}%</span>
-                  </div>
-                  <div className={styles.barAssets}>{d.assets} assets</div>
-                </div>
-              ))}
+            <div style={{ width: '100%', height: 200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={deptData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e8eaed" />
+                  <XAxis dataKey="dept" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#888' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#888' }} />
+                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="#2e86de" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
           {/* Maintenance Frequency Line Chart */}
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Maintenance Frequency</h2>
-            <div className={styles.lineChartWrapper}>
-              <svg viewBox="0 0 300 120" className={styles.lineChart}>
-                <defs>
-                  <linearGradient id="mGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2e86de" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#2e86de" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                {/* Grid lines */}
-                {[20, 45, 70, 95].map(y => (
-                  <line key={y} x1="0" y1={y} x2="300" y2={y} stroke="#e8eaed" strokeWidth="1" />
-                ))}
-                {/* Area */}
-                <path d="M0,90 L50,70 L100,50 L150,60 L200,30 L250,45 L300,20 L300,120 L0,120 Z" fill="url(#mGrad)" />
-                {/* Line */}
-                <path d="M0,90 L50,70 L100,50 L150,60 L200,30 L250,45 L300,20" fill="none" stroke="#2e86de" strokeWidth="2.5" strokeLinejoin="round" />
-                {/* Dots */}
-                {[[0,90],[50,70],[100,50],[150,60],[200,30],[250,45],[300,20]].map(([x,y], i) => (
-                  <circle key={i} cx={x} cy={y} r="3.5" fill="#fff" stroke="#2e86de" strokeWidth="2" />
-                ))}
-              </svg>
-              <div className={styles.lineLabels}>
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'].map(m => (
-                  <span key={m} style={{ fontSize: 10, color: '#aaa' }}>{m}</span>
-                ))}
-              </div>
+            <div style={{ width: '100%', height: 160 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2e86de" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#2e86de" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e8eaed" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#888' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#888' }} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
+                  <Area type="monotone" dataKey="value" stroke="#2e86de" strokeWidth={2.5} fillOpacity={1} fill="url(#colorValue)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
             <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
               <div className={styles.metricChip} style={{ background: '#ddeeff', color: '#2e86de' }}>

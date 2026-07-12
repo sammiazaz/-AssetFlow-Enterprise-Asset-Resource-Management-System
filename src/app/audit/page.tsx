@@ -6,24 +6,10 @@ import Topbar from '@/components/Topbar';
 import layoutStyles from '../page.module.css';
 import styles from './audit.module.css';
 
+import { useMockData } from '@/context/MockDataContext';
+import { useToast } from '@/context/ToastContext';
+
 type VerificationStatus = 'verified' | 'missing' | 'damaged' | null;
-
-interface AuditAsset {
-  id: string;
-  name: string;
-  expectedLocation: string;
-  status: VerificationStatus;
-}
-
-const initialAssets: AuditAsset[] = [
-  { id: 'AF-0021', name: 'Dell Laptop', expectedLocation: 'Desk #11', status: 'verified' },
-  { id: 'AF-0023', name: 'Office Chair', expectedLocation: 'Desk #11', status: null },
-  { id: 'AF-4526', name: 'HP Monitor', expectedLocation: 'Desk #11', status: 'missing' },
-  { id: 'AF-0043', name: 'Projector', expectedLocation: 'Room B2', status: null },
-  { id: 'AF-0061', name: 'Standing Desk', expectedLocation: 'Engineering Bay', status: 'verified' },
-  { id: 'AF-0078', name: 'Logitech Webcam', expectedLocation: 'Meeting Room A', status: 'damaged' },
-  { id: 'AF-0092', name: 'Extension Board', expectedLocation: 'Server Room', status: 'verified' },
-];
 
 const statusConfig = {
   verified: { label: 'Verified', color: '#006d4e', bg: '#d4f5ee', icon: 'check_circle' },
@@ -32,19 +18,44 @@ const statusConfig = {
 };
 
 export default function AuditPage() {
-  const [assets, setAssets] = useState<AuditAsset[]>(initialAssets);
+  const { assets, setAssets, addActivityLog } = useMockData();
+  const { showToast } = useToast();
+  
+  const [auditStatuses, setAuditStatuses] = useState<Record<string, VerificationStatus>>({});
   const [cycleOpen, setCycleOpen] = useState(true);
 
   const setStatus = (id: string, status: VerificationStatus) => {
-    setAssets(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+    if (!cycleOpen) return;
+    setAuditStatuses(prev => ({ ...prev, [id]: status }));
   };
 
-  const verified = assets.filter(a => a.status === 'verified').length;
-  const missing = assets.filter(a => a.status === 'missing').length;
-  const damaged = assets.filter(a => a.status === 'damaged').length;
+  const getStatus = (id: string) => auditStatuses[id] || null;
+
+  const verified = assets.filter(a => getStatus(a.id) === 'verified').length;
+  const missing = assets.filter(a => getStatus(a.id) === 'missing').length;
+  const damaged = assets.filter(a => getStatus(a.id) === 'damaged').length;
   const flagged = missing + damaged;
   const total = assets.length;
-  const progress = Math.round((verified / total) * 100);
+  const progress = total === 0 ? 0 : Math.round((Object.keys(auditStatuses).length / total) * 100);
+
+  const closeAudit = () => {
+    setCycleOpen(false);
+    
+    // Update assets in context
+    setAssets(prev => prev.map(a => {
+      const st = getStatus(a.id);
+      if (st === 'missing') {
+        return { ...a, status: 'Lost', history: ['Flagged missing during audit', ...a.history] } as any;
+      }
+      if (st === 'damaged') {
+        return { ...a, condition: 'Needs Repair', history: ['Flagged damaged during audit', ...a.history] } as any;
+      }
+      return a;
+    }));
+    
+    addActivityLog(`Audit cycle closed. ${flagged} assets flagged.`, 'Audit');
+    showToast('Audit cycle closed successfully.', 'success');
+  };
 
   return (
     <div className={layoutStyles.layout}>
@@ -60,7 +71,7 @@ export default function AuditPage() {
           </div>
           <div className={layoutStyles.headerActions}>
             {cycleOpen ? (
-              <button className={styles.closeCycleBtn} onClick={() => setCycleOpen(false)}>
+              <button className={styles.closeCycleBtn} onClick={closeAudit}>
                 <span className="material-symbols-outlined" style={{ fontSize: 16 }}>lock</span>
                 Close Audit Cycle
               </button>
@@ -126,67 +137,73 @@ export default function AuditPage() {
               </tr>
             </thead>
             <tbody>
-              {assets.map((asset) => (
-                <tr key={asset.id} className={styles.tr}>
-                  <td className={styles.td}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div className={styles.assetIcon}>
-                        <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#2e86de', fontVariationSettings: "'FILL' 1" }}>inventory_2</span>
+              {assets.map((asset) => {
+                const status = getStatus(asset.id);
+                return (
+                  <tr key={asset.id} className={styles.tr}>
+                    <td className={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div className={styles.assetIcon}>
+                          <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#2e86de', fontVariationSettings: "'FILL' 1" }}>
+                            {asset.categoryId === 'c1' ? 'laptop_mac' : asset.categoryId === 'c2' ? 'chair' : asset.categoryId === 'c3' ? 'directions_car' : 'videocam'}
+                          </span>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-on-surface)' }}>{asset.name}</p>
+                          <p style={{ fontSize: 11, color: '#888', fontFamily: 'monospace' }}>{asset.tag}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-on-surface)' }}>{asset.name}</p>
-                        <p style={{ fontSize: 11, color: '#888', fontFamily: 'monospace' }}>{asset.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className={styles.td}>
-                    <span style={{ fontSize: 13, color: 'var(--color-on-surface-variant)' }}>{asset.expectedLocation}</span>
-                  </td>
-                  <td className={styles.td}>
-                    {asset.status ? (
-                      <span className={styles.statusBadge} style={{
-                        backgroundColor: statusConfig[asset.status].bg,
-                        color: statusConfig[asset.status].color
-                      }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>
-                          {statusConfig[asset.status].icon}
+                    </td>
+                    <td className={styles.td}>
+                      <span style={{ fontSize: 13, color: 'var(--color-on-surface-variant)' }}>{asset.location}</span>
+                    </td>
+                    <td className={styles.td}>
+                      {status ? (
+                        <span className={styles.statusBadge} style={{
+                          backgroundColor: statusConfig[status].bg,
+                          color: statusConfig[status].color
+                        }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{statusConfig[status].icon}</span>
+                          {statusConfig[status].label}
                         </span>
-                        {statusConfig[asset.status].label}
-                      </span>
-                    ) : (
-                      <span className={styles.pendingBadge}>Pending</span>
-                    )}
-                  </td>
-                  <td className={styles.td}>
-                    <div className={styles.actionBtns}>
-                      <button
-                        className={`${styles.markBtn} ${asset.status === 'verified' ? styles.markBtnActive : ''}`}
-                        style={{ '--mark-color': '#00b894' } as React.CSSProperties}
-                        onClick={() => setStatus(asset.id, 'verified')}
-                        title="Verified"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>check</span>
-                      </button>
-                      <button
-                        className={`${styles.markBtn} ${asset.status === 'missing' ? styles.markBtnActive : ''}`}
-                        style={{ '--mark-color': '#e17055' } as React.CSSProperties}
-                        onClick={() => setStatus(asset.id, 'missing')}
-                        title="Missing"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>search_off</span>
-                      </button>
-                      <button
-                        className={`${styles.markBtn} ${asset.status === 'damaged' ? styles.markBtnActive : ''}`}
-                        style={{ '--mark-color': '#e67e22' } as React.CSSProperties}
-                        onClick={() => setStatus(asset.id, 'damaged')}
-                        title="Damaged"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>warning</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                      ) : (
+                        <span style={{ fontSize: 13, color: '#aaa', fontStyle: 'italic' }}>Pending Verification</span>
+                      )}
+                    </td>
+                    <td className={styles.td} style={{ textAlign: 'right' }}>
+                      <div className={styles.actionBtns}>
+                        <button
+                          className={`${styles.markBtn} ${status === 'verified' ? styles.markBtnActive : ''}`}
+                          style={{ '--mark-color': '#00b894' } as React.CSSProperties}
+                          onClick={() => setStatus(asset.id, 'verified')}
+                          disabled={!cycleOpen}
+                          title="Verified"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>check</span>
+                        </button>
+                        <button
+                          className={`${styles.markBtn} ${status === 'missing' ? styles.markBtnActive : ''}`}
+                          style={{ '--mark-color': '#e17055' } as React.CSSProperties}
+                          onClick={() => setStatus(asset.id, 'missing')}
+                          disabled={!cycleOpen}
+                          title="Missing"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>search_off</span>
+                        </button>
+                        <button
+                          className={`${styles.markBtn} ${status === 'damaged' ? styles.markBtnActive : ''}`}
+                          style={{ '--mark-color': '#e67e22' } as React.CSSProperties}
+                          onClick={() => setStatus(asset.id, 'damaged')}
+                          disabled={!cycleOpen}
+                          title="Damaged"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>warning</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

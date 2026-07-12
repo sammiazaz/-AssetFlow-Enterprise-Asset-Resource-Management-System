@@ -5,10 +5,24 @@ import layoutStyles from '../page.module.css';
 import styles from './assets.module.css';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
+import { useMockData } from '@/context/MockDataContext';
+import { useToast } from '@/context/ToastContext';
+import StatusBadge from '@/components/ui/StatusBadge';
+import Modal from '@/components/ui/Modal';
+import Drawer from '@/components/ui/Drawer';
+import { Asset } from '@/lib/mockDb';
 
 export default function AssetDirectory() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  const { assets, setAssets, categories, departments } = useMockData();
+  const { showToast } = useToast();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newAsset, setNewAsset] = useState({ name: '', tag: '', categoryId: '', location: '', serialNumber: '', condition: 'Good', isSharedBookable: false });
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
   return (
     <div className={layoutStyles.layout}>
@@ -26,11 +40,28 @@ export default function AssetDirectory() {
               <p className={layoutStyles.pageSubtitle}>Manage and track organization-wide resources across all locations.</p>
             </div>
             <div className={styles.headerActions}>
-              <button className={styles.iconBtn} onClick={() => alert("Download CSV")}>
+              <div style={{ position: 'relative' }}>
+                <span className="material-symbols-outlined" style={{ position: 'absolute', left: 10, top: 10, fontSize: 18, color: 'var(--color-outline)' }}>search</span>
+                <input 
+                  type="text" 
+                  placeholder="Search assets..." 
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{
+                    padding: '8px 12px 8px 36px', borderRadius: '4px', border: '1px solid var(--color-outline-variant)',
+                    backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)', width: '250px'
+                  }}
+                />
+              </div>
+              <button className={styles.iconBtn} onClick={() => alert("Download CSV")} title="Download CSV">
                 <span className="material-symbols-outlined">download</span>
               </button>
-              <button className={styles.iconBtn} onClick={() => alert("Print layout")}>
-                <span className="material-symbols-outlined">print</span>
+              <button 
+                className={layoutStyles.btnPrimary} 
+                onClick={() => setIsModalOpen(true)}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
+                Register Asset
               </button>
             </div>
           </div>
@@ -39,39 +70,30 @@ export default function AssetDirectory() {
           <div className={styles.filterRow}>
             <span className={styles.filterLabel}>Filter by:</span>
             
-            <button 
+            <select 
               className={styles.filterChip} 
-              style={{ borderColor: activeFilter === 'category' ? 'var(--color-primary)' : '', color: activeFilter === 'category' ? 'var(--color-primary)' : '' }}
-              onClick={() => setActiveFilter('category')}
+              style={{ borderColor: activeFilter === 'category' ? 'var(--color-primary)' : '' }}
+              value={activeFilter === 'category' ? 'IT Equipment' : ''}
+              onChange={e => setActiveFilter(e.target.value ? 'category' : null)}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>category</span>
-              <span>Category: All</span>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>expand_more</span>
-            </button>
+              <option value="">Category: All</option>
+              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
             
-            <button 
+            <select 
               className={styles.filterChip}
-              style={{ borderColor: activeFilter === 'status' ? 'var(--color-primary)' : '', color: activeFilter === 'status' ? 'var(--color-primary)' : '' }}
-              onClick={() => setActiveFilter('status')}
+              style={{ borderColor: activeFilter === 'status' ? 'var(--color-primary)' : '' }}
+              onChange={e => setActiveFilter(e.target.value ? 'status' : null)}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>info</span>
-              <span>Status: Any</span>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>expand_more</span>
-            </button>
-            
-            <button 
-              className={styles.filterChip}
-              style={{ borderColor: activeFilter === 'department' ? 'var(--color-primary)' : '', color: activeFilter === 'department' ? 'var(--color-primary)' : '' }}
-              onClick={() => setActiveFilter('department')}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>corporate_fare</span>
-              <span>Department: IT</span>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>expand_more</span>
-            </button>
+              <option value="">Status: Any</option>
+              <option value="Available">Available</option>
+              <option value="Allocated">Allocated</option>
+              <option value="Under Maintenance">Maintenance</option>
+            </select>
             
             <div className={layoutStyles.dividerVertical}></div>
             
-            <button className={styles.clearFilters} onClick={() => setActiveFilter(null)}>Clear Filters</button>
+            <button className={styles.clearFilters} onClick={() => { setActiveFilter(null); setSearch(''); }}>Clear Filters</button>
           </div>
         </section>
 
@@ -89,149 +111,49 @@ export default function AssetDirectory() {
               </tr>
             </thead>
             <tbody>
-              {/* Row 1 */}
-              <tr className={styles.tr}>
-                <td className={styles.td}>
-                  <span className={styles.assetTag}>AF-0012</span>
-                </td>
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div className={`${styles.assetIcon} ${styles.iconElectronics}`}>
-                      <span className="material-symbols-outlined">laptop_mac</span>
-                    </div>
-                    <div>
-                      <p className="body-md" style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>Dell Latitude 5420</p>
-                      <p className="label-md" style={{ color: 'var(--color-outline)', fontWeight: 400 }}>SN: DL-77X-B49</p>
-                    </div>
-                  </div>
-                </td>
-                <td className={`${styles.td} body-md`} style={{ color: 'var(--color-on-surface-variant)' }}>Electronics</td>
-                <td className={styles.td}>
-                  <span className={`${styles.statusBadge} ${styles.statusAllocated}`}>
-                    <span className={styles.statusDotAllocated}></span>
-                    Allocated
-                  </span>
-                </td>
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--color-outline)' }}>location_on</span>
-                    <span className="body-md" style={{ color: 'var(--color-on-surface-variant)' }}>Bengaluru, KA</span>
-                  </div>
-                </td>
-                <td className={styles.td} style={{ textAlign: 'right' }}>
-                  <button className={styles.actionBtn}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>more_vert</span>
-                  </button>
-                </td>
-              </tr>
-
-              {/* Row 2 */}
-              <tr className={styles.tr}>
-                <td className={styles.td}>
-                  <span className={styles.assetTag}>AF-0062</span>
-                </td>
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div className={`${styles.assetIcon} ${styles.iconFurniture}`} style={{ backgroundColor: 'rgba(255, 219, 202, 0.3)', color: 'var(--color-tertiary)' }}>
-                      <span className="material-symbols-outlined">videocam</span>
-                    </div>
-                    <div>
-                      <p className="body-md" style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>Epson Projector Pro</p>
-                      <p className="label-md" style={{ color: 'var(--color-outline)', fontWeight: 400 }}>SN: EP-V9-9001</p>
-                    </div>
-                  </div>
-                </td>
-                <td className={`${styles.td} body-md`} style={{ color: 'var(--color-on-surface-variant)' }}>Electronics</td>
-                <td className={styles.td}>
-                  <span className={`${styles.statusBadge} ${styles.statusMaintenance}`}>
-                    <span className={styles.statusDotMaintenance}></span>
-                    Maintenance
-                  </span>
-                </td>
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--color-outline)' }}>layers</span>
-                    <span className="body-md" style={{ color: 'var(--color-on-surface-variant)' }}>HQ Floor 2</span>
-                  </div>
-                </td>
-                <td className={styles.td} style={{ textAlign: 'right' }}>
-                  <button className={styles.actionBtn}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>more_vert</span>
-                  </button>
-                </td>
-              </tr>
-
-              {/* Row 3 */}
-              <tr className={styles.tr}>
-                <td className={styles.td}>
-                  <span className={styles.assetTag}>AF-0201</span>
-                </td>
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div className={`${styles.assetIcon} ${styles.iconFurniture}`}>
-                      <span className="material-symbols-outlined">chair_alt</span>
-                    </div>
-                    <div>
-                      <p className="body-md" style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>Ergonomic Office Chair</p>
-                      <p className="label-md" style={{ color: 'var(--color-outline)', fontWeight: 400 }}>Batch: FRN-2023-A</p>
-                    </div>
-                  </div>
-                </td>
-                <td className={`${styles.td} body-md`} style={{ color: 'var(--color-on-surface-variant)' }}>Furniture</td>
-                <td className={styles.td}>
-                  <span className={`${styles.statusBadge} ${styles.statusAvailable}`}>
-                    <span className={styles.statusDotAvailable}></span>
-                    Available
-                  </span>
-                </td>
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--color-outline)' }}>warehouse</span>
-                    <span className="body-md" style={{ color: 'var(--color-on-surface-variant)' }}>Warehouse A</span>
-                  </div>
-                </td>
-                <td className={styles.td} style={{ textAlign: 'right' }}>
-                  <button className={styles.actionBtn}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>more_vert</span>
-                  </button>
-                </td>
-              </tr>
-
-              {/* Row 4 */}
-              <tr className={styles.tr}>
-                <td className={styles.td}>
-                  <span className={styles.assetTag}>AF-0144</span>
-                </td>
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div className={`${styles.assetIcon} ${styles.iconInfrastructure}`}>
-                      <span className="material-symbols-outlined">dns</span>
-                    </div>
-                    <div>
-                      <p className="body-md" style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>Server Unit Blade R740</p>
-                      <p className="label-md" style={{ color: 'var(--color-outline)', fontWeight: 400 }}>SN: SVR-XYZ-011</p>
-                    </div>
-                  </div>
-                </td>
-                <td className={`${styles.td} body-md`} style={{ color: 'var(--color-on-surface-variant)' }}>Infrastructure</td>
-                <td className={styles.td}>
-                  <span className={`${styles.statusBadge} ${styles.statusAllocated}`}>
-                    <span className={styles.statusDotAllocated}></span>
-                    Allocated
-                  </span>
-                </td>
-                <td className={styles.td}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--color-outline)' }}>dns</span>
-                    <span className="body-md" style={{ color: 'var(--color-on-surface-variant)' }}>Data Center 1</span>
-                  </div>
-                </td>
-                <td className={styles.td} style={{ textAlign: 'right' }}>
-                  <button className={styles.actionBtn}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>more_vert</span>
-                  </button>
-                </td>
-              </tr>
+              {assets.filter(a => {
+                if (search && !a.name.toLowerCase().includes(search.toLowerCase()) && !a.tag.toLowerCase().includes(search.toLowerCase())) return false;
+                // Basic filter logic, for full implementation it needs to map category strings to IDs or we just skip detailed filtering for brevity in prototype
+                return true;
+              }).map(asset => {
+                const category = categories.find(c => c.id === asset.categoryId);
+                
+                return (
+                  <tr key={asset.id} className={styles.tr}>
+                    <td className={styles.td}>
+                      <span className={styles.assetTag}>{asset.tag}</span>
+                    </td>
+                    <td className={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div className={`${styles.assetIcon} ${styles.iconElectronics}`}>
+                          <span className="material-symbols-outlined">
+                            {asset.categoryId === 'c1' ? 'laptop_mac' : asset.categoryId === 'c2' ? 'chair' : asset.categoryId === 'c3' ? 'directions_car' : 'videocam'}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="body-md" style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>{asset.name}</p>
+                          <p className="label-md" style={{ color: 'var(--color-outline)', fontWeight: 400 }}>SN: {asset.serialNumber}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={`${styles.td} body-md`} style={{ color: 'var(--color-on-surface-variant)' }}>{category?.name || '-'}</td>
+                    <td className={styles.td}>
+                      <StatusBadge status={asset.status} />
+                    </td>
+                    <td className={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--color-outline)' }}>location_on</span>
+                        <span className="body-md" style={{ color: 'var(--color-on-surface-variant)' }}>{asset.location}</span>
+                      </div>
+                    </td>
+                    <td className={styles.td} style={{ textAlign: 'right' }}>
+                      <button className={styles.actionBtn} onClick={() => setSelectedAsset(asset)} title="View Details">
+                        <span className="material-symbols-outlined" style={{ fontSize: 20 }}>info</span>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -333,6 +255,123 @@ export default function AssetDirectory() {
       <button className={styles.fab}>
         <span className="material-symbols-outlined" style={{ fontSize: 28 }}>add</span>
       </button>
+
+      {/* Register Asset Modal */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title="Register New Asset"
+        width="600px"
+        footer={
+          <>
+            <button className={layoutStyles.btnSecondary} onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button className={layoutStyles.btnPrimary} onClick={() => {
+              if (!newAsset.name || !newAsset.tag) {
+                showToast('Name and Tag are required.', 'error');
+                return;
+              }
+              setAssets(prev => [{
+                ...newAsset,
+                id: 'a' + Date.now(),
+                status: 'Available',
+                acquisitionDate: new Date().toISOString().split('T')[0],
+                acquisitionCost: 0,
+                history: []
+              } as any, ...prev]);
+              showToast('Asset registered successfully!');
+              setIsModalOpen(false);
+              setNewAsset({ name: '', tag: '', categoryId: '', location: '', serialNumber: '', condition: 'Good', isSharedBookable: false });
+            }}>Register Asset</button>
+          </>
+        }
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-on-surface)' }}>Asset Name *</span>
+            <input type="text" value={newAsset.name} onChange={e => setNewAsset({...newAsset, name: e.target.value})} style={{ padding: '8px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 4, background: 'var(--color-surface)', color: 'var(--color-on-surface)' }} />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-on-surface)' }}>Asset Tag *</span>
+            <input type="text" value={newAsset.tag} onChange={e => setNewAsset({...newAsset, tag: e.target.value})} style={{ padding: '8px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 4, background: 'var(--color-surface)', color: 'var(--color-on-surface)' }} placeholder="e.g. AF-1023" />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-on-surface)' }}>Category</span>
+            <select value={newAsset.categoryId} onChange={e => setNewAsset({...newAsset, categoryId: e.target.value})} style={{ padding: '8px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 4, background: 'var(--color-surface)', color: 'var(--color-on-surface)' }}>
+              <option value="">Select category...</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-on-surface)' }}>Serial Number</span>
+            <input type="text" value={newAsset.serialNumber} onChange={e => setNewAsset({...newAsset, serialNumber: e.target.value})} style={{ padding: '8px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 4, background: 'var(--color-surface)', color: 'var(--color-on-surface)' }} />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: 'span 2' }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-on-surface)' }}>Location</span>
+            <input type="text" value={newAsset.location} onChange={e => setNewAsset({...newAsset, location: e.target.value})} style={{ padding: '8px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 4, background: 'var(--color-surface)', color: 'var(--color-on-surface)' }} />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, gridColumn: 'span 2', marginTop: 8 }}>
+            <input type="checkbox" checked={newAsset.isSharedBookable} onChange={e => setNewAsset({...newAsset, isSharedBookable: e.target.checked})} />
+            <span style={{ fontSize: 14, color: 'var(--color-on-surface)' }}>Mark as Shared Bookable Resource</span>
+          </label>
+        </div>
+      </Modal>
+
+      {/* Asset Details Drawer */}
+      <Drawer
+        isOpen={!!selectedAsset}
+        onClose={() => setSelectedAsset(null)}
+        title="Asset Details"
+      >
+        {selectedAsset && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div>
+              <p style={{ fontSize: 12, color: 'var(--color-outline)' }}>Tag</p>
+              <p style={{ fontSize: 18, fontWeight: 600 }}>{selectedAsset.tag}</p>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <p style={{ fontSize: 12, color: 'var(--color-outline)' }}>Name</p>
+                <p style={{ fontWeight: 500 }}>{selectedAsset.name}</p>
+              </div>
+              <div>
+                <p style={{ fontSize: 12, color: 'var(--color-outline)' }}>Serial Number</p>
+                <p style={{ fontWeight: 500 }}>{selectedAsset.serialNumber}</p>
+              </div>
+              <div>
+                <p style={{ fontSize: 12, color: 'var(--color-outline)' }}>Status</p>
+                <div style={{ marginTop: 4 }}><StatusBadge status={selectedAsset.status} /></div>
+              </div>
+              <div>
+                <p style={{ fontSize: 12, color: 'var(--color-outline)' }}>Condition</p>
+                <p style={{ fontWeight: 500 }}>{selectedAsset.condition}</p>
+              </div>
+              <div>
+                <p style={{ fontSize: 12, color: 'var(--color-outline)' }}>Location</p>
+                <p style={{ fontWeight: 500 }}>{selectedAsset.location}</p>
+              </div>
+              <div>
+                <p style={{ fontSize: 12, color: 'var(--color-outline)' }}>Shared Bookable</p>
+                <p style={{ fontWeight: 500 }}>{selectedAsset.isSharedBookable ? 'Yes' : 'No'}</p>
+              </div>
+            </div>
+
+            <hr style={{ borderTop: '1px solid var(--color-outline-variant)', borderBottom: 'none' }} />
+
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>History</p>
+              {selectedAsset.history?.length === 0 ? (
+                <p style={{ fontSize: 13, color: 'var(--color-outline)' }}>No history available for this asset.</p>
+              ) : (
+                <ul style={{ paddingLeft: 20, fontSize: 13, color: 'var(--color-on-surface-variant)' }}>
+                  {selectedAsset.history.map((h, i) => <li key={i}>{h}</li>)}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+      </Drawer>
+
     </div>
   );
 }

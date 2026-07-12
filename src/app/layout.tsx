@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Inter } from "next/font/google";
 import "./globals.css";
+import { MockDataProvider } from "@/context/MockDataContext";
+import { ToastProvider } from "@/context/ToastContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +29,13 @@ export default function RootLayout({
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body>{children}</body>
+      <body>
+        <ToastProvider>
+          <MockDataProvider>
+            {children}
+          </MockDataProvider>
+        </ToastProvider>
+      </body>
     </html>
   );
 }

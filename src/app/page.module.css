@@ -719,3 +719,38 @@
   color: var(--color-on-surface);
   margin-right: auto;
 }
+
+/* ===========================
+   ALERT BANNER
+   =========================== */
+.alertBanner {
+  background-color: #fff3f0;
+  border: 1px solid #f5c5bb;
+  color: #e17055;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.alertIcon {
+  font-size: 20px;
+  font-variation-settings: 'FILL' 1;
+}
+
+.alertAction {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e17055;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.alertAction:hover {
+  color: #c95c43;
+}

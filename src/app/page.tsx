@@ -1,37 +1,50 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
 import styles from './page.module.css';
-
-const kpiData = [
-  { label: 'Available', value: '128', icon: 'check_circle', color: '#2e86de', bg: '#ddeeff', href: '/assets' },
-  { label: 'Allocated', value: '76', icon: 'person', color: '#00b894', bg: '#d4f5ee', href: '/allocation' },
-  { label: 'Available Resources', value: '9', icon: 'meeting_room', color: '#6c5ce7', bg: '#ede9ff', href: '/bookings' },
-  { label: 'Active Bookings', value: '9', icon: 'calendar_today', color: '#e67e22', bg: '#fff3e0', href: '/bookings' },
-  { label: 'Pending Transfers', value: '3', icon: 'sync', color: '#2e86de', bg: '#ddeeff', href: '/allocation' },
-  { label: 'Upcoming Returns', value: '12', icon: 'keyboard_return', color: '#6c5ce7', bg: '#ede9ff', href: '/assets' },
-];
-
-const recentActivity = [
-  { icon: 'laptop_mac', text: 'Laptop AF-0114 allocated to Priya Shah', dept: 'IT dept', status: 'Checked Out', color: '#2e86de' },
-  { icon: 'event_available', text: 'Room B2 booking confirmed · 2:00 to 5:00 PM', dept: 'Operations', status: 'Reserved', color: '#00b894' },
-  { icon: 'build', text: 'Projector AF-0062 maintenance resolved', dept: 'Facilities', status: 'Resolved', color: '#6c5ce7' },
-];
-
-const assetsByCategory = [
-  { category: 'IT Equipment', count: 54, pct: 42 },
-  { category: 'Furniture', count: 32, pct: 25 },
-  { category: 'Vehicles', count: 18, pct: 14 },
-  { category: 'AV Equipment', count: 14, pct: 11 },
-  { category: 'Others', count: 10, pct: 8 },
-];
+import { useMockData } from '@/context/MockDataContext';
 
 const categoryColors = ['#2e86de', '#00b894', '#6c5ce7', '#e17055', '#fdcb6e'];
 
 export default function Dashboard() {
+  const { assets, bookings, maintenanceRequests, activityLogs } = useMockData();
+
+  const kpiData = useMemo(() => {
+    const available = assets.filter(a => a.status === 'Available').length;
+    const allocated = assets.filter(a => a.status === 'Allocated').length;
+    const activeBookings = bookings.filter(b => b.status === 'Ongoing' || b.status === 'Upcoming').length;
+    const pendingTransfers = 0; // Fake state for now
+    const upcomingReturns = assets.filter(a => a.expectedReturnDate && new Date(a.expectedReturnDate) > new Date()).length;
+    
+    return [
+      { label: 'Available', value: available.toString(), icon: 'check_circle', color: '#2e86de', bg: '#ddeeff', href: '/assets' },
+      { label: 'Allocated', value: allocated.toString(), icon: 'person', color: '#00b894', bg: '#d4f5ee', href: '/allocation' },
+      { label: 'Available Resources', value: assets.filter(a => a.isSharedBookable).length.toString(), icon: 'meeting_room', color: '#6c5ce7', bg: '#ede9ff', href: '/bookings' },
+      { label: 'Active Bookings', value: activeBookings.toString(), icon: 'calendar_today', color: '#e67e22', bg: '#fff3e0', href: '/bookings' },
+      { label: 'Pending Transfers', value: pendingTransfers.toString(), icon: 'sync', color: '#2e86de', bg: '#ddeeff', href: '/allocation' },
+      { label: 'Upcoming Returns', value: upcomingReturns.toString(), icon: 'keyboard_return', color: '#6c5ce7', bg: '#ede9ff', href: '/assets' },
+    ];
+  }, [assets, bookings]);
+
+  const overdueAssets = useMemo(() => {
+    return assets.filter(a => a.expectedReturnDate && new Date(a.expectedReturnDate) < new Date()).length;
+  }, [assets]);
+
+  const assetsByCategory = useMemo(() => {
+    const counts: Record<string, number> = {};
+    assets.forEach(a => {
+      counts[a.categoryId] = (counts[a.categoryId] || 0) + 1;
+    });
+    const total = assets.length || 1;
+    return Object.keys(counts).map(key => ({
+      category: key === 'c1' ? 'IT Equipment' : key === 'c2' ? 'Furniture' : key === 'c3' ? 'Vehicles' : 'AV Equipment',
+      count: counts[key],
+      pct: Math.round((counts[key] / total) * 100)
+    })).sort((a, b) => b.count - a.count);
+  }, [assets]);
   return (
     <div className={styles.layout}>
       <Sidebar />
@@ -61,15 +74,17 @@ export default function Dashboard() {
         </div>
 
         {/* Alert Banner */}
-        <div className={styles.alertBanner}>
-          <span className={`material-symbols-outlined ${styles.alertIcon}`}>warning</span>
-          <span style={{ fontWeight: 600, fontSize: 13 }}>
-            3 assets overdue for return — flagged for follow-up
-          </span>
-          <Link href="/audit" className={styles.alertAction} style={{ textDecoration: 'none' }}>
-            TAKE ACTION
-          </Link>
-        </div>
+        {overdueAssets > 0 && (
+          <div className={styles.alertBanner}>
+            <span className={`material-symbols-outlined ${styles.alertIcon}`}>warning</span>
+            <span style={{ fontWeight: 600, fontSize: 13 }}>
+              {overdueAssets} assets overdue for return — flagged for follow-up
+            </span>
+            <Link href="/assets" className={styles.alertAction} style={{ textDecoration: 'none' }}>
+              TAKE ACTION
+            </Link>
+          </div>
+        )}
 
         {/* KPI Grid — 6 cards matching Screen 2 */}
         <div className={styles.kpiGrid}>
@@ -99,24 +114,21 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className={styles.cardBody} style={{ padding: 0 }}>
-              {recentActivity.map((item, idx) => (
+              {activityLogs.slice(0, 4).map((item, idx) => (
                 <div key={idx} className={styles.activityItem} style={{ padding: '12px 20px' }}>
                   <div style={{
                     width: 36, height: 36, borderRadius: 8, display: 'flex',
                     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    backgroundColor: item.color + '1a'
+                    backgroundColor: item.type === 'Allocation' ? '#2e86de1a' : item.type === 'Booking' ? '#00b8941a' : '#6c5ce71a'
                   }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: item.color, fontVariationSettings: "'FILL' 1" }}>
-                      {item.icon}
+                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: item.type === 'Allocation' ? '#2e86de' : item.type === 'Booking' ? '#00b894' : '#6c5ce7', fontVariationSettings: "'FILL' 1" }}>
+                      {item.type === 'Allocation' ? 'person' : item.type === 'Booking' ? 'calendar_today' : 'build'}
                     </span>
                   </div>
                   <div className={styles.activityContent}>
                     <p className={styles.activityText}>{item.text}</p>
-                    <p className={styles.activityTime}>{item.dept}</p>
+                    <p className={styles.activityTime} suppressHydrationWarning>{new Date(item.date).toLocaleDateString()}</p>
                   </div>
-                  <span className={styles.badge} style={{ backgroundColor: item.color + '1a', color: item.color, fontSize: 11, whiteSpace: 'nowrap' }}>
-                    {item.status}
-                  </span>
                 </div>
               ))}
             </div>
@@ -142,10 +154,33 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <div className={styles.progressBar}>
-                        <div className={styles.progressFill} style={{ width: `${item.pct}%`, backgroundColor: categoryColors[idx] }} />
+                        <div className={styles.progressFill} style={{ width: `${item.pct}%`, backgroundColor: categoryColors[idx % categoryColors.length] }} />
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Asset Health Placeholder */}
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h2 className={styles.cardTitle}>Asset Health</h2>
+              </div>
+              <div className={styles.cardBody}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 24, border: '4px solid #00b894', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface)' }}>92%</span>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-on-surface)' }}>Healthy Assets</p>
+                    <p style={{ fontSize: 12, color: 'var(--color-on-surface-variant)' }}>Based on recent audits</p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                  <span style={{ color: '#00b894', fontWeight: 600 }}>Good: {assets.filter(a => a.condition === 'Good' || a.condition === 'Excellent').length}</span>
+                  <span style={{ color: '#e17055', fontWeight: 600 }}>Needs Repair: {assets.filter(a => a.condition === 'Needs Repair').length}</span>
+                  <span style={{ color: '#d63031', fontWeight: 600 }}>Lost/Broken: 0</span>
                 </div>
               </div>
             </div>

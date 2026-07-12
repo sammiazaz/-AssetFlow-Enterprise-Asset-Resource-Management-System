@@ -6,69 +6,67 @@ import Topbar from '@/components/Topbar';
 import layoutStyles from '../page.module.css';
 import styles from './maintenance.module.css';
 
-type KanbanStatus = 'pending' | 'approved' | 'assigned' | 'inprogress' | 'resolved';
-
-interface MaintenanceCard {
-  id: string;
-  asset: string;
-  assetId: string;
-  issue: string;
-  assignee?: string;
-  date: string;
-  priority: 'high' | 'medium' | 'low';
-}
-
-const initialCards: Record<KanbanStatus, MaintenanceCard[]> = {
-  pending: [
-    { id: 'MC-001', asset: 'Dell Laptop', assetId: 'AF-0114', issue: 'Screen flickering, battery drain', date: '8 Jul', priority: 'high' },
-    { id: 'MC-002', asset: 'Office Chair', assetId: 'AF-0021', issue: 'Chair repair — wheels stuck', date: '9 Jul', priority: 'low' },
-  ],
-  approved: [
-    { id: 'MC-003', asset: 'Projector', assetId: 'AF-0062', issue: 'Relay not burning up', date: '6 Jul', priority: 'medium' },
-    { id: 'MC-004', asset: 'AC Unit', assetId: 'AF-0088', issue: 'Noisy compressor', date: '7 Jul', priority: 'medium' },
-  ],
-  assigned: [
-    { id: 'MC-005', asset: 'HP Server', assetId: 'AF-0079', issue: 'HDD server down', assignee: 'Rohan Mehta', date: '5 Jul', priority: 'high' },
-  ],
-  inprogress: [
-    { id: 'MC-006', asset: 'Printer', assetId: 'AF-892', issue: 'Paper jam, partly ordered', assignee: 'Jun Sato', date: '4 Jul', priority: 'medium' },
-  ],
-  resolved: [
-    { id: 'MC-007', asset: 'Monitor', assetId: 'AF-875', issue: 'Dead pixel rows — replaced', assignee: 'Aditi Rao', date: '2 Jul', priority: 'low' },
-  ],
-};
+type KanbanStatus = 'Pending' | 'Approved' | 'In Progress' | 'Resolved';
 
 const columns: { key: KanbanStatus; label: string; color: string; bg: string }[] = [
-  { key: 'pending', label: 'Pending', color: '#e17055', bg: '#fff3f0' },
-  { key: 'approved', label: 'Approved', color: '#2e86de', bg: '#f0f7ff' },
-  { key: 'assigned', label: 'Technician Assigned', color: '#6c5ce7', bg: '#f5f3ff' },
-  { key: 'inprogress', label: 'In Progress', color: '#e67e22', bg: '#fff8f0' },
-  { key: 'resolved', label: 'Resolved', color: '#00b894', bg: '#d4f5ee' },
+  { key: 'Pending', label: 'Pending', color: '#e17055', bg: '#fff3f0' },
+  { key: 'Approved', label: 'Approved', color: '#2e86de', bg: '#f0f7ff' },
+  { key: 'In Progress', label: 'In Progress', color: '#e67e22', bg: '#fff8f0' },
+  { key: 'Resolved', label: 'Resolved', color: '#00b894', bg: '#d4f5ee' },
 ];
 
-const priorityColor = { high: '#e17055', medium: '#e67e22', low: '#00b894' };
+
+
+const priorityColor = { High: '#e17055', Medium: '#e67e22', Low: '#00b894' };
+
+import { useMockData } from '@/context/MockDataContext';
+import { MaintenanceRequest } from '@/lib/mockDb';
+import Modal from '@/components/ui/Modal';
+import { useToast } from '@/context/ToastContext';
 
 export default function MaintenancePage() {
-  const [cards, setCards] = useState(initialCards);
-  const [dragCard, setDragCard] = useState<{ card: MaintenanceCard; from: KanbanStatus } | null>(null);
+  const { maintenanceRequests, setMaintenanceRequests, assets, setAssets, employees, addActivityLog } = useMockData();
+  const { showToast } = useToast();
+  
+  const [dragCard, setDragCard] = useState<{ card: MaintenanceRequest; from: string } | null>(null);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newRequest, setNewRequest] = useState({ assetId: '', issue: '', priority: 'Medium' });
 
-  const handleDragStart = (card: MaintenanceCard, from: KanbanStatus) => {
+  const handleDragStart = (card: MaintenanceRequest, from: string) => {
     setDragCard({ card, from });
   };
 
   const handleDrop = (to: KanbanStatus) => {
     if (!dragCard || dragCard.from === to) return;
-    setCards(prev => {
-      const updated = { ...prev };
-      updated[dragCard.from] = prev[dragCard.from].filter(c => c.id !== dragCard.card.id);
-      updated[to] = [...prev[to], { ...dragCard.card }];
-      return updated;
-    });
+    
+    // Update the request status
+    setMaintenanceRequests(prev => prev.map(r => r.id === dragCard.card.id ? { ...r, status: to } : r));
+    
+    // Auto-update Asset status based on Maintenance status
+    const reqAsset = assets.find(a => a.id === dragCard.card.assetId);
+    if (reqAsset) {
+      if ((to === 'Approved' || to === 'In Progress') && reqAsset.status !== 'Under Maintenance') {
+        setAssets(prev => prev.map(a => a.id === reqAsset.id ? { ...a, status: 'Under Maintenance', history: [`Under maintenance: ${dragCard.card.issue}`, ...a.history] } : a));
+        addActivityLog(`${reqAsset.name} moved to Under Maintenance`, 'Maintenance');
+      } else if (to === 'Resolved' && reqAsset.status === 'Under Maintenance') {
+        setAssets(prev => prev.map(a => a.id === reqAsset.id ? { ...a, status: 'Available', history: [`Maintenance resolved: ${dragCard.card.issue}`, ...a.history] } : a));
+        addActivityLog(`${reqAsset.name} is now Available after maintenance`, 'Maintenance');
+      }
+    }
+    
     setDragCard(null);
   };
 
-  const total = Object.values(cards).flat().length;
-  const resolved = cards.resolved.length;
+  const total = maintenanceRequests.length;
+  const resolved = maintenanceRequests.filter(m => m.status === 'Resolved').length;
+
+  const groupedCards = {
+    Pending: maintenanceRequests.filter(m => m.status === 'Pending'),
+    Approved: maintenanceRequests.filter(m => m.status === 'Approved'),
+    'In Progress': maintenanceRequests.filter(m => m.status === 'In Progress'),
+    Resolved: maintenanceRequests.filter(m => m.status === 'Resolved'),
+  };
 
   return (
     <div className={layoutStyles.layout}>
@@ -83,8 +81,8 @@ export default function MaintenancePage() {
             </p>
           </div>
           <div className={layoutStyles.headerActions}>
-            <button className={layoutStyles.btnSecondary}>
-              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+            <button className={layoutStyles.btnPrimary} onClick={() => setIsModalOpen(true)}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
               New Request
             </button>
           </div>
@@ -107,40 +105,44 @@ export default function MaintenancePage() {
               <div className={styles.colHeader} style={{ borderColor: col.color }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: col.color }}>{col.label}</span>
                 <span className={styles.colCount} style={{ backgroundColor: col.bg, color: col.color }}>
-                  {cards[col.key].length}
+                  {groupedCards[col.key].length}
                 </span>
               </div>
 
               <div className={styles.colCards}>
-                {cards[col.key].map((card) => (
-                  <div
-                    key={card.id}
-                    className={styles.card}
-                    draggable
-                    onDragStart={() => handleDragStart(card, col.key)}
-                  >
-                    <div className={styles.cardTopRow}>
-                      <span className={styles.cardId}>{card.assetId}</span>
-                      <span
-                        className={styles.priorityDot}
-                        style={{ backgroundColor: priorityColor[card.priority] }}
-                        title={card.priority}
-                      />
+                {groupedCards[col.key].map((card) => {
+                  const asset = assets.find(a => a.id === card.assetId);
+                  const assignee = card.status === 'In Progress' || card.status === 'Resolved' ? employees[0]?.name : undefined;
+                  return (
+                    <div
+                      key={card.id}
+                      className={styles.card}
+                      draggable
+                      onDragStart={() => handleDragStart(card, col.key)}
+                    >
+                      <div className={styles.cardTopRow}>
+                        <span className={styles.cardId}>{asset?.tag || 'Unknown'}</span>
+                        <span
+                          className={styles.priorityDot}
+                          style={{ backgroundColor: priorityColor[card.priority as keyof typeof priorityColor] }}
+                          title={card.priority}
+                        />
+                      </div>
+                      <p className={styles.cardAsset}>{asset?.name || 'Unknown Asset'}</p>
+                      <p className={styles.cardIssue}>{card.issue}</p>
+                      <div className={styles.cardFooter}>
+                        {assignee && (
+                          <span className={styles.cardAssignee}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 12 }}>person</span>
+                            {assignee}
+                          </span>
+                        )}
+                        <span className={styles.cardDate} suppressHydrationWarning>{new Date(card.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}</span>
+                      </div>
                     </div>
-                    <p className={styles.cardAsset}>{card.asset}</p>
-                    <p className={styles.cardIssue}>{card.issue}</p>
-                    <div className={styles.cardFooter}>
-                      {card.assignee && (
-                        <span className={styles.cardAssignee}>
-                          <span className="material-symbols-outlined" style={{ fontSize: 12 }}>person</span>
-                          {card.assignee}
-                        </span>
-                      )}
-                      <span className={styles.cardDate}>{card.date}</span>
-                    </div>
-                  </div>
-                ))}
-                {cards[col.key].length === 0 && (
+                  );
+                })}
+                {groupedCards[col.key].length === 0 && (
                   <div className={styles.emptyCol}>
                     <span className="material-symbols-outlined" style={{ fontSize: 24, opacity: 0.3 }}>inbox</span>
                     <p>Drop here</p>
@@ -151,6 +153,61 @@ export default function MaintenancePage() {
           ))}
         </div>
       </main>
+
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title="New Maintenance Request"
+        width="500px"
+        footer={
+          <>
+            <button className={layoutStyles.btnSecondary} onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button className={layoutStyles.btnPrimary} onClick={() => {
+              if (!newRequest.assetId || !newRequest.issue) {
+                showToast('Asset and Issue are required.', 'error');
+                return;
+              }
+              const newMaintenance: MaintenanceRequest = {
+                id: 'm' + Date.now(),
+                assetId: newRequest.assetId,
+                requestedBy: 'e1',
+                issue: newRequest.issue,
+                priority: newRequest.priority as any,
+                status: 'Pending',
+                date: new Date().toISOString()
+              };
+              setMaintenanceRequests(prev => [newMaintenance, ...prev]);
+              addActivityLog(`New maintenance request for ${assets.find(a => a.id === newRequest.assetId)?.name}`, 'Maintenance');
+              showToast('Maintenance request submitted successfully!');
+              setIsModalOpen(false);
+              setNewRequest({ assetId: '', issue: '', priority: 'Medium' });
+            }}>Submit Request</button>
+          </>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-on-surface)' }}>Asset *</span>
+            <select value={newRequest.assetId} onChange={e => setNewRequest({...newRequest, assetId: e.target.value})} style={{ padding: '8px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 4, background: 'var(--color-surface)' }}>
+              <option value="">Select an asset...</option>
+              {assets.map(a => <option key={a.id} value={a.id}>{a.tag} - {a.name}</option>)}
+            </select>
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-on-surface)' }}>Issue Description *</span>
+            <textarea value={newRequest.issue} onChange={e => setNewRequest({...newRequest, issue: e.target.value})} rows={3} style={{ padding: '8px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 4, background: 'var(--color-surface)' }} />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-on-surface)' }}>Priority</span>
+            <select value={newRequest.priority} onChange={e => setNewRequest({...newRequest, priority: e.target.value})} style={{ padding: '8px 12px', border: '1px solid var(--color-outline-variant)', borderRadius: 4, background: 'var(--color-surface)' }}>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </label>
+        </div>
+      </Modal>
+
     </div>
   );
 }

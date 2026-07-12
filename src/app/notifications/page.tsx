@@ -6,28 +6,9 @@ import Topbar from '@/components/Topbar';
 import layoutStyles from '../page.module.css';
 import styles from './notifications.module.css';
 
+import { useMockData } from '@/context/MockDataContext';
+
 type Tab = 'all' | 'alerts' | 'approvals' | 'bookings';
-
-interface Notification {
-  id: string;
-  type: Tab;
-  icon: string;
-  iconColor: string;
-  text: string;
-  time: string;
-  read: boolean;
-}
-
-const notifications: Notification[] = [
-  { id: '1', type: 'approvals', icon: 'assignment_turned_in', iconColor: '#2e86de', text: 'Laptop AF-0114 assigned to Priya Shah', time: '2m ago', read: false },
-  { id: '2', type: 'approvals', icon: 'check_circle', iconColor: '#00b894', text: 'Maintenance request AF-0062 approved', time: '10m ago', read: false },
-  { id: '3', type: 'bookings', icon: 'event_available', iconColor: '#6c5ce7', text: 'Booking confirmed — Room B2 · 2:00 to 3:00 PM', time: '35m ago', read: false },
-  { id: '4', type: 'alerts', icon: 'warning', iconColor: '#e67e22', text: 'Overdue return · Camera Kit AF-0031 — 4 days', time: '1d ago', read: true },
-  { id: '5', type: 'alerts', icon: 'flag', iconColor: '#e17055', text: 'Audit discrepancy flagged · AF-0098 damaged', time: '2d ago', read: true },
-  { id: '6', type: 'approvals', icon: 'sync', iconColor: '#6c5ce7', text: 'Transfer request pending approval — Projector AF-0062', time: '2d ago', read: true },
-  { id: '7', type: 'bookings', icon: 'event', iconColor: '#2e86de', text: 'Room T1 booking cancelled by Sana Iqbal', time: '3d ago', read: true },
-  { id: '8', type: 'alerts', icon: 'build', iconColor: '#e67e22', text: 'Maintenance overdue — Forklift AF-0018 inspection', time: '3d ago', read: true },
-];
 
 const tabs: { key: Tab; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -36,15 +17,56 @@ const tabs: { key: Tab; label: string }[] = [
   { key: 'bookings', label: 'Bookings' },
 ];
 
+function timeAgo(dateString: string) {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function mapTypeToTab(type: string): Tab {
+  switch (type) {
+    case 'Allocation': return 'approvals';
+    case 'Booking': return 'bookings';
+    default: return 'alerts';
+  }
+}
+
+function getIconAndColor(type: string) {
+  switch (type) {
+    case 'Allocation': return { icon: 'assignment_turned_in', color: '#2e86de' };
+    case 'Booking': return { icon: 'event_available', color: '#6c5ce7' };
+    case 'Maintenance': return { icon: 'build', color: '#e67e22' };
+    case 'Audit': return { icon: 'flag', color: '#e17055' };
+    default: return { icon: 'notifications', color: '#00b894' };
+  }
+}
+
 export default function NotificationsPage() {
+  const { activityLogs, setActivityLogs } = useMockData();
   const [activeTab, setActiveTab] = useState<Tab>('all');
-  const [items, setItems] = useState(notifications);
 
-  const filtered = activeTab === 'all' ? items : items.filter(n => n.type === activeTab);
-  const unread = items.filter(n => !n.read).length;
+  const mappedLogs = activityLogs.map(log => {
+    const { icon, color } = getIconAndColor(log.type);
+    return {
+      id: log.id,
+      type: mapTypeToTab(log.type),
+      originalType: log.type,
+      icon,
+      iconColor: color,
+      text: log.text,
+      time: timeAgo(log.date),
+      read: !!log.read,
+    };
+  });
 
-  const markAllRead = () => setItems(prev => prev.map(n => ({ ...n, read: true })));
-  const markRead = (id: string) => setItems(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const filtered = activeTab === 'all' ? mappedLogs : mappedLogs.filter(n => n.type === activeTab);
+  const unread = mappedLogs.filter(n => !n.read).length;
+
+  const markAllRead = () => setActivityLogs(prev => prev.map(n => ({ ...n, read: true })));
+  const markRead = (id: string) => setActivityLogs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
 
   return (
     <div className={layoutStyles.layout}>
@@ -70,7 +92,7 @@ export default function NotificationsPage() {
         {/* Tabs */}
         <div className={styles.tabs}>
           {tabs.map(tab => {
-            const count = tab.key === 'all' ? items.length : items.filter(n => n.type === tab.key).length;
+            const count = tab.key === 'all' ? mappedLogs.length : mappedLogs.filter(n => n.type === tab.key).length;
             return (
               <button
                 key={tab.key}
@@ -113,7 +135,7 @@ export default function NotificationsPage() {
                   color: n.iconColor,
                   textTransform: 'capitalize'
                 }}>
-                  {n.type}
+                  {n.originalType}
                 </span>
               </div>
             ))
