@@ -1,72 +1,87 @@
 :root {
-  --color-surface: #faf8ff;
-  --color-surface-dim: #d9d9e4;
-  --color-surface-bright: #faf8ff;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f3f3fe;
-  --color-surface-container: #ededf8;
-  --color-tertiary-fixed: #ffdbca;
-  --color-tertiary-container: #be5600;
-  --color-inverse-surface: #2e3038;
-  --color-on-surface: #191b23;
-  --color-primary-container: #376ced;
-  --color-on-tertiary: #ffffff;
-  --color-inverse-on-surface: #f0f0fb;
-  --color-on-surface-variant: #434654;
-  --color-secondary-fixed: #e1e0ff;
-  --color-on-tertiary-container: #fffbff;
-  --color-error: #ba1a1a;
-  --color-on-primary-fixed: #00174b;
-  --color-error-container: #ffdad6;
-  --color-primary-fixed: #dbe1ff;
-  --color-surface-container-highest: #e1e2ed;
-  --color-on-tertiary-fixed: #331200;
-  --color-outline: #737686;
-  --color-surface-tint: #1154d5;
-  --color-on-primary-container: #fefcff;
-  --color-on-error-container: #93000a;
-  --color-on-secondary: #ffffff;
-  --color-on-error: #ffffff;
-  --color-on-secondary-container: #fffbff;
-  --color-surface-variant: #e1e2ed;
-  --color-on-secondary-fixed-variant: #2f2ebe;
-  --color-inverse-primary: #b4c5ff;
-  --color-on-secondary-fixed: #07006c;
-  --color-background: #faf8ff;
-  --color-tertiary-fixed-dim: #ffb68e;
-  --color-surface-container-low: #f3f3fe;
-  --color-on-background: #191b23;
-  --color-surface-dim: #d9d9e4;
-  --color-surface: #faf8ff;
-  --color-secondary: #4648d4;
-  --color-surface-bright: #faf8ff;
-  --color-tertiary: #984300;
-  --color-secondary-fixed-dim: #c0c1ff;
-  --color-surface-container-lowest: #ffffff;
-  --color-secondary-container: #6063ee;
-  --color-on-primary: #ffffff;
-  --color-on-tertiary-fixed-variant: #773300;
-  --color-surface-container-high: #e7e7f2;
-  --color-primary: #0a51d3;
-  --color-on-primary-fixed-variant: #003ea8;
-  --color-primary-fixed-dim: #b4c5ff;
-  --color-outline-variant: #c3c6d7;
+  /* EZOfficeInventory-inspired Color Palette */
+  
+  /* Sidebar dark navy */
+  --color-sidebar-bg: #1e2a3a;
+  --color-sidebar-hover: #263345;
+  --color-sidebar-active: #2c3e55;
+  --color-sidebar-active-bar: #2e86de;
+  --color-sidebar-text: rgba(255, 255, 255, 0.75);
+  --color-sidebar-text-active: #ffffff;
+  --color-sidebar-icon: rgba(255, 255, 255, 0.6);
+  --color-sidebar-icon-active: #ffffff;
+  --color-sidebar-border: rgba(255, 255, 255, 0.06);
 
+  /* Main area */
+  --color-background: #f0f2f5;
+  --color-on-background: #1a2038;
+
+  /* Surface (cards, panels) */
+  --color-surface: #ffffff;
+  --color-surface-dim: #e8eaf0;
+  --color-surface-bright: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8f9fc;
+  --color-surface-container: #f0f2f5;
+  --color-surface-container-high: #e8eaf0;
+  --color-surface-container-highest: #dde0e8;
+
+  /* Text */
+  --color-on-surface: #1a2038;
+  --color-on-surface-variant: #5a6474;
+  --color-outline: #99a3b0;
+  --color-outline-variant: #d4d8e0;
+
+  /* Primary (blue) */
+  --color-primary: #2e86de;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #ddeeff;
+  --color-on-primary-container: #003a6e;
+  --color-primary-fixed: #e8f4ff;
+  --color-primary-fixed-dim: #c5dff8;
+
+  /* Secondary */
+  --color-secondary: #54a0ff;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e8f3ff;
+  --color-on-secondary-container: #003a7d;
+
+  /* Tertiary (success/green) */
+  --color-tertiary: #00b894;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #d4f5ee;
+  --color-on-tertiary-container: #004d3e;
+
+  /* Error */
+  --color-error: #e55039;
+  --color-on-error: #ffffff;
+  --color-error-container: #fde8e5;
+  --color-on-error-container: #8b1a0e;
+
+  /* Header */
+  --color-header-bg: #ffffff;
+  --color-header-border: #e0e4eb;
+  --color-header-text: #1a2038;
+
+  /* Spacing */
   --spacing-base: 4px;
   --spacing-sidebar: 220px;
   --spacing-gutter: 24px;
   --spacing-margin: 32px;
-  --spacing-card-padding: 24px;
+  --spacing-card-padding: 20px;
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.75rem;
-  --radius-default: 0.5rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-default: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
-  
-  --shadow-level-1: 0px 4px 20px rgba(0, 0, 0, 0.04);
-  --shadow-level-2: 0px 10px 30px rgba(0, 0, 0, 0.08);
+
+  /* Shadows */
+  --shadow-level-1: 0px 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-level-2: 0px 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -78,18 +93,24 @@
 body {
   background-color: var(--color-background);
   color: var(--color-on-background);
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-geist-sans), var(--font-inter), sans-serif;
   color: var(--color-on-surface);
+  font-weight: 600;
 }
 
 a {
   color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
   text-decoration: none;
 }
 
@@ -102,40 +123,38 @@ button {
 
 input, select, textarea {
   font-family: inherit;
+  font-size: 14px;
 }
 
 /* Typography Classes */
 .display-kpi {
   font-family: var(--font-geist-sans);
-  font-size: 40px;
+  font-size: 36px;
   font-weight: 700;
-  line-height: 48px;
+  line-height: 44px;
   letter-spacing: -0.02em;
 }
 
 .headline-lg {
-  font-family: var(--font-geist-sans);
-  font-size: 32px;
-  font-weight: 600;
-  line-height: 40px;
-}
-
-.headline-md {
-  font-family: var(--font-geist-sans);
   font-size: 24px;
   font-weight: 600;
   line-height: 32px;
 }
 
+.headline-md {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
 .headline-sm {
-  font-family: var(--font-geist-sans);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 24px;
 }
 
 .body-lg {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
   line-height: 24px;
 }
@@ -146,10 +165,16 @@ input, select, textarea {
   line-height: 20px;
 }
 
-.label-md {
+.body-sm {
   font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.label-md {
+  font-size: 11px;
   font-weight: 600;
   line-height: 16px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }

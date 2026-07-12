@@ -1,7 +1,7 @@
 .headerSection {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 .headerTop {
   display: flex;
@@ -31,7 +31,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 .filterLabel {
   font-size: 12px;
@@ -43,14 +43,15 @@
 .filterChip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 99px;
-  background-color: var(--color-surface-container-lowest);
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
   border: 1px solid var(--color-outline-variant);
-  transition: all 0.2s;
+  transition: all 0.15s;
   color: var(--color-on-surface);
   cursor: pointer;
+  font-size: 13px;
   font-weight: 500;
 }
 .filterChip:hover {
@@ -70,11 +71,12 @@
 }
 
 .tableContainer {
-  background-color: var(--color-surface-container-lowest);
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
-  margin-top: 32px;
+  margin-top: 20px;
 }
 .table {
   width: 100%;
@@ -82,40 +84,47 @@
   border-collapse: collapse;
 }
 .th {
-  padding: 20px 24px;
-  font-size: 12px;
+  padding: 10px 16px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--color-on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background-color: rgba(243, 243, 254, 0.5);
+  background-color: var(--color-surface-container-low);
+  border-bottom: 1px solid var(--color-outline-variant);
+  white-space: nowrap;
 }
 .tr {
-  transition: background-color 0.2s;
-  border-top: 1px solid rgba(195, 198, 215, 0.2);
+  border-bottom: 1px solid var(--color-surface-container);
+  transition: background-color 0.1s;
+}
+.tr:last-child {
+  border-bottom: none;
 }
 .tr:hover {
-  background-color: rgba(243, 243, 254, 0.5);
+  background-color: var(--color-surface-container-low);
 }
 .td {
-  padding: 20px 24px;
+  padding: 10px 16px;
+  vertical-align: middle;
 }
 .assetTag {
-  padding: 4px 12px;
-  background-color: var(--color-surface-container-highest);
-  border-radius: 6px;
+  padding: 3px 8px;
+  background-color: var(--color-surface-container);
+  border-radius: var(--radius-sm);
   font-family: monospace;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--color-on-surface);
   font-weight: 600;
 }
 .assetIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .iconElectronics {
   background-color: rgba(10, 81, 211, 0.1);
@@ -132,10 +141,10 @@
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
-  border-radius: 99px;
-  font-size: 12px;
-  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
 }
 .statusAllocated {
   background-color: rgba(59, 111, 240, 0.15);
@@ -187,8 +196,9 @@
 }
 
 .pagination {
-  padding: 20px 32px;
-  background-color: rgba(243, 243, 254, 0.5);
+  padding: 12px 16px;
+  background-color: var(--color-surface-container-low);
+  border-top: 1px solid var(--color-outline-variant);
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -14,51 +14,44 @@ export default function AssetDirectory() {
       {/* Persistent SideNavBar */}
       <aside className={layoutStyles.sidebar}>
         <div className={layoutStyles.sidebarHeader}>
-          <h1 className={`${layoutStyles.brandName} headline-sm`}>
-            <span className="material-symbols-outlined" style={{ color: 'var(--color-primary)' }}>grid_view</span>
+          <span className={`${layoutStyles.brandName} headline-sm`}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#54a0ff' }}>grid_view</span>
             AssetFlow
-          </h1>
-          <p className={`${layoutStyles.brandSubtitle} label-md`}>Management System</p>
+          </span>
         </div>
-        
         <nav className={layoutStyles.nav}>
           <Link href="/" className={layoutStyles.navItem}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>dashboard</span>
-            <span className="body-md">Dashboard</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>dashboard</span>
+            <span style={{ fontSize: 13 }}>Dashboard</span>
           </Link>
-          
           <Link href="/organization-setup" className={layoutStyles.navItem}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>corporate_fare</span>
-            <span className="body-md">Organization Setup</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>corporate_fare</span>
+            <span style={{ fontSize: 13 }}>Organization</span>
           </Link>
-          
           <Link href="/assets" className={`${layoutStyles.navItem} ${layoutStyles.navItemActive}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>inventory_2</span>
-            <span className="body-md">Assets</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>inventory_2</span>
+            <span style={{ fontSize: 13 }}>Assets</span>
           </Link>
-          <a href="#" className={layoutStyles.navItem} onClick={(e) => { e.preventDefault(); alert("Allocation module coming soon!") }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>move_up</span>
-            <span className="body-md">Allocation & Transfer</span>
+          <a href="#" className={layoutStyles.navItem} onClick={(e) => e.preventDefault()}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>move_up</span>
+            <span style={{ fontSize: 13 }}>Allocation</span>
           </a>
-          <a href="#" className={layoutStyles.navItem} onClick={(e) => { e.preventDefault(); alert("Booking module coming soon!") }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>calendar_today</span>
-            <span className="body-md">Resource Booking</span>
+          <a href="#" className={layoutStyles.navItem} onClick={(e) => e.preventDefault()}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>calendar_today</span>
+            <span style={{ fontSize: 13 }}>Bookings</span>
           </a>
-          <a href="#" className={layoutStyles.navItem} onClick={(e) => { e.preventDefault(); alert("Maintenance module coming soon!") }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>build</span>
-            <span className="body-md">Maintenance</span>
+          <a href="#" className={layoutStyles.navItem} onClick={(e) => e.preventDefault()}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>build</span>
+            <span style={{ fontSize: 13 }}>Maintenance</span>
           </a>
-          <a href="#" className={layoutStyles.navItem} onClick={(e) => { e.preventDefault(); alert("Audit module coming soon!") }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>fact_check</span>
-            <span className="body-md">Audit</span>
+          <a href="#" className={layoutStyles.navItem} onClick={(e) => e.preventDefault()}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>analytics</span>
+            <span style={{ fontSize: 13 }}>Reports</span>
           </a>
-          <a href="#" className={layoutStyles.navItem} onClick={(e) => { e.preventDefault(); alert("Reports module coming soon!") }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>analytics</span>
-            <span className="body-md">Reports</span>
-          </a>
-          <a href="#" className={layoutStyles.navItem} onClick={(e) => { e.preventDefault(); alert("Notifications module coming soon!") }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>notifications</span>
-            <span className="body-md">Notifications</span>
+          <div className={layoutStyles.navDivider} />
+          <a href="#" className={layoutStyles.navItem} onClick={(e) => e.preventDefault()}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>settings</span>
+            <span style={{ fontSize: 13 }}>Settings</span>
           </a>
         </nav>
       </aside>
@@ -69,34 +62,33 @@ export default function AssetDirectory() {
           <div className={layoutStyles.searchInputWrapper}>
             <input 
               type="text" 
-              className={`${layoutStyles.searchInput} body-md`} 
-              placeholder="Search by tag, serial, or QR code..." 
+              className={layoutStyles.searchInput} 
+              placeholder="Search assets by tag, serial, name..." 
             />
             <span className={`material-symbols-outlined ${layoutStyles.searchIcon}`}>search</span>
-            <button className={layoutStyles.searchBtn}>
-              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>arrow_forward</span>
-            </button>
           </div>
         </div>
         
         <div className={layoutStyles.topbarActions}>
-          <Link href="/assets" className={`${layoutStyles.quickLink} label-md`} style={{ textDecoration: 'none' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18, marginRight: 8 }}>add</span>
-            Register Asset
+          <Link href="/assets" className={layoutStyles.quickLink} style={{ textDecoration: 'none' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+            New Asset
           </Link>
-          
           <div className={layoutStyles.dividerVertical}></div>
-          
-          <button className={layoutStyles.helpBtn} onClick={() => alert("Help opened")}>
-            <span className="material-symbols-outlined">help</span>
+          <button className={layoutStyles.helpBtn}>
+            <span className="material-symbols-outlined">notifications</span>
           </button>
-          <button className={layoutStyles.helpBtn} onClick={() => alert("Settings opened")}>
-            <span className="material-symbols-outlined">settings</span>
+          <button className={layoutStyles.helpBtn}>
+            <span className="material-symbols-outlined">help_outline</span>
           </button>
-          
-          <div className={layoutStyles.userProfile} style={{ padding: 0, borderRadius: 'var(--radius-full)' }} onClick={() => alert("Profile opened")}>
+          <div className={layoutStyles.dividerVertical}></div>
+          <div className={layoutStyles.userProfile}>
             <div className={layoutStyles.userAvatar}>
               <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1TUCT6ofiNoGnpP2VdVWgI3ltZnxuWK7zHQFoUJcDXoDItExzQDJebm1BNB2DbHkw4_pM9fk9AO_VzntpjV56193Y0WkMar4K9qeoY4PF_gTIr9FHMlSNFjEbhS9zjURTyU6t9xNZqP00Twern6VKocWScmBRMWOVRQme0OWCriOqt5gl-bZmSMeD_FvoQMn9HyscL5GbvVK0Mou9CtxoAGqr267td_jd6EGn1on-_zlX6oW7MXUk" alt="Profile" />
+            </div>
+            <div className={layoutStyles.userInfo}>
+              <p className={layoutStyles.userName}>Admin User</p>
+              <p className={layoutStyles.userRole}>Administrator</p>
             </div>
           </div>
         </div>
@@ -109,8 +101,8 @@ export default function AssetDirectory() {
         <section className={styles.headerSection}>
           <div className={styles.headerTop}>
             <div>
-              <h2 className="headline-lg tracking-tight" style={{ color: 'var(--color-on-surface)' }}>Asset Directory</h2>
-              <p className="body-md" style={{ color: 'var(--color-on-surface-variant)', marginTop: 4 }}>Manage and track organization-wide resources across all locations.</p>
+            <h1 className={layoutStyles.pageTitle}>Asset Directory</h1>
+              <p className={layoutStyles.pageSubtitle}>Manage and track organization-wide resources across all locations.</p>
             </div>
             <div className={styles.headerActions}>
               <button className={styles.iconBtn} onClick={() => alert("Download CSV")}>
